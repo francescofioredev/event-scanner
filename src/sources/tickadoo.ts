@@ -12,7 +12,8 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<an
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Accept: "application/json",
+      // MCP Streamable HTTP requires both types in Accept even when JSON responses are enabled
+      Accept: "application/json, text/event-stream",
     },
     body: JSON.stringify({
       jsonrpc: "2.0",
@@ -24,6 +25,22 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<an
   });
 
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+  const contentType = res.headers.get("content-type") ?? "";
+
+  if (contentType.includes("text/event-stream")) {
+    // Parse SSE: find the first data line that contains a result
+    const text = await res.text();
+    for (const line of text.split("\n")) {
+      if (!line.startsWith("data:")) continue;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === "[DONE]") continue;
+      const json = JSON.parse(payload);
+      if (json.result) return json.result;
+      if (json.error) throw new Error(json.error.message ?? "MCP error");
+    }
+    throw new Error("No result in SSE response");
+  }
 
   const json = await res.json();
   if (json.error) throw new Error(json.error.message ?? "MCP error");

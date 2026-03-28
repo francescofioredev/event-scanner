@@ -1,11 +1,11 @@
 import type { EventCard } from "@/types";
 import type { EventProvider } from "@/sources/types";
 import { computeFitScore } from "@/helpers";
+import { fetchEnrichmentMap, getEnrichment } from "@/enrichment/predicthq";
 import lumaProvider from "@/sources/luma";
 import meetupProvider from "@/sources/meetup";
 import ticketmasterProvider from "@/sources/ticketmaster";
 import linkedinProvider from "@/sources/linkedin";
-import predicthqProvider from "@/sources/predicthq";
 import tickadooProvider from "@/sources/tickadoo";
 
 // ─── Registry ───────────────────────────────────────────────────────────────────
@@ -16,7 +16,6 @@ const providers: EventProvider[] = [
   meetupProvider,
   ticketmasterProvider,
   linkedinProvider,
-  predicthqProvider,
   tickadooProvider,
 ];
 
@@ -66,9 +65,11 @@ async function _findLiveEvents(
 ): Promise<{ events: EventCard[]; sources: Record<string, number> }> {
   const active = providers.filter((p) => p.enabled);
 
-  const results = await Promise.allSettled(
-    active.map((p) => p.search(query, location))
-  );
+  // Run provider searches and PredictHQ enrichment fetch in parallel
+  const [results, enrichmentMap] = await Promise.all([
+    Promise.allSettled(active.map((p) => p.search(query, location))),
+    fetchEnrichmentMap(query, location),
+  ]);
 
   const allPartials: Partial<EventCard>[] = [];
   results.forEach((result, i) => {
@@ -90,7 +91,7 @@ async function _findLiveEvents(
   const sources: Record<string, number> = {};
   const events: EventCard[] = deduplicated.flatMap((partial) => {
     try {
-      const { fitScore, fitReason } = computeFitScore(partial, query);
+      const { fitScore, fitReason } = computeFitScore(partial, query, getEnrichment(partial, enrichmentMap));
       const source = partial.source || "mock";
       sources[source] = (sources[source] || 0) + 1;
 

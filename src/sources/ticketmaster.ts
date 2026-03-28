@@ -13,7 +13,6 @@ const ticketmasterProvider: EventProvider = {
       const params = new URLSearchParams({
         apikey: apiKey,
         keyword: query,
-        classificationName: "conference,seminar",
         size: "20",
         sort: "date,asc",
       });
