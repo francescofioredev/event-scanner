@@ -49,3 +49,11 @@ export interface UserProfile {
   formatPreferences: EventFormat[];
   goal: string;
 }
+
+export interface SavedEvent {
+  userId: string;
+  eventId: string;
+  eventData: EventCard;
+  notes: string;
+  savedAt: string;
+}

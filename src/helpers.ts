@@ -92,6 +92,60 @@ export function formatDate(dateStr: string): string {
   }
 }
 
+export function buildGoogleCalendarUrl(event: {
+  title: string;
+  date: string;
+  location: string;
+  description?: string;
+  url?: string;
+}): string {
+  const formatYMD = (d: Date) =>
+    d.getFullYear().toString() +
+    (d.getMonth() + 1).toString().padStart(2, "0") +
+    d.getDate().toString().padStart(2, "0");
+
+  let startDate: Date;
+  let endDate: Date;
+
+  try {
+    // Handle range dates like "Apr 20–21, 2026" or "Apr 20-21, 2026"
+    const rangeMatch = event.date.match(/^(\w+ \d+)\s*[–\-]\s*(\d+),?\s*(\d{4})$/);
+    if (rangeMatch) {
+      startDate = new Date(`${rangeMatch[1]}, ${rangeMatch[3]}`);
+      endDate = new Date(startDate);
+      endDate.setDate(parseInt(rangeMatch[2], 10));
+    } else {
+      startDate = new Date(event.date);
+      endDate = new Date(startDate);
+    }
+
+    if (isNaN(startDate.getTime())) throw new Error("Invalid date");
+  } catch {
+    // Fallback: tomorrow
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() + 1);
+    endDate = new Date(startDate);
+  }
+
+  // Google Calendar all-day events use exclusive end date
+  endDate.setDate(endDate.getDate() + 1);
+
+  const details = [event.description, event.url && `More info: ${event.url}`]
+    .filter(Boolean)
+    .join("\n\n")
+    .slice(0, 1000);
+
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: event.title,
+    dates: `${formatYMD(startDate)}/${formatYMD(endDate)}`,
+    location: event.location,
+    details,
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
 export function filterByQuery(events: EventCard[], query: string): EventCard[] {
   const q = query.toLowerCase();
   return events.filter(

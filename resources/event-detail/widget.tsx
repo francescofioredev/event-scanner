@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { McpUseProvider, useWidget, useWidgetTheme, type WidgetMetadata } from "mcp-use/react";
 import { z } from "zod";
 
@@ -17,14 +18,14 @@ const eventDetailSchema = z.object({
   date: z.string(),
   location: z.string(),
   format: z.enum(["conference", "meetup", "hackathon", "workshop", "webinar"]),
-  price: z.enum(["free", "paid"]),
+  price: z.enum(["free", "paid", "unknown"]),
   priceAmount: z.number().optional(),
   currency: z.string().optional(),
   topics: z.array(z.string()),
   fitScore: z.number(),
   fitReason: z.string(),
   attendeeProfile: z.string(),
-  source: z.enum(["eventbrite", "luma", "mock"]).optional(),
+  source: z.enum(["luma", "meetup", "ticketmaster", "eventbrite", "linkedin", "predicthq", "tickadoo", "mock"]).optional(),
   url: z.string().optional(),
   description: z.string(),
   agenda: z.array(z.string()),
@@ -64,87 +65,18 @@ function useColors() {
     bg: dark ? "#111827" : "#f9fafb",
     cardBg: dark ? "#1f2937" : "#ffffff",
     border: dark ? "#374151" : "#e5e7eb",
-    sectionBg: dark ? "#161e2e" : "#f3f4f6",
     text: dark ? "#f3f4f6" : "#111827",
     textSecondary: dark ? "#9ca3af" : "#6b7280",
     textMuted: dark ? "#6b7280" : "#9ca3af",
-    accent: dark ? "#818cf8" : "#6366f1",
-    accentBg: dark ? "#1e1b4b" : "#eef2ff",
-    scoreHigh: dark ? "#4ade80" : "#16a34a",
-    scoreMid: dark ? "#fcd34d" : "#d97706",
-    scoreLow: dark ? "#f87171" : "#dc2626",
-    scoreHighBg: dark ? "#052e16" : "#dcfce7",
-    scoreMidBg: dark ? "#451a03" : "#fef3c7",
-    scoreLowBg: dark ? "#450a0a" : "#fee2e2",
-    tagBg: dark ? "#1e3a5f" : "#dbeafe",
-    tagText: dark ? "#93c5fd" : "#1d4ed8",
-    ctaBg: dark ? "#4f46e5" : "#6366f1",
-    ctaText: "#ffffff",
-    ctaHoverBg: dark ? "#4338ca" : "#4f46e5",
+    accent: dark ? "#60a5fa" : "#2563eb",
+    perkBg: dark ? "#052e16" : "#dcfce7",
+    perkText: dark ? "#4ade80" : "#16a34a",
+    metricBg: dark ? "#1f2937" : "#f3f4f6",
+    metricBorder: dark ? "#374151" : "#e5e7eb",
   };
 }
 
-// ─── Format config ────────────────────────────────────────────────────────────
-
-const FORMAT_CONFIG: Record<EventDetail["format"], { label: string; emoji: string; bg: string; color: string }> = {
-  conference: { label: "Conference", emoji: "🎤", bg: "#ede9fe", color: "#7c3aed" },
-  meetup:     { label: "Meetup",     emoji: "🤝", bg: "#d1fae5", color: "#065f46" },
-  hackathon:  { label: "Hackathon",  emoji: "⚡", bg: "#fef3c7", color: "#92400e" },
-  workshop:   { label: "Workshop",   emoji: "🛠️", bg: "#fce7f3", color: "#9d174d" },
-  webinar:    { label: "Webinar",    emoji: "💻", bg: "#e0f2fe", color: "#0369a1" },
-};
-
 // ─── Sub-components ───────────────────────────────────────────────────────────
-
-function ScoreDimensionBar({
-  label,
-  score,
-  colors,
-}: {
-  label: string;
-  score: number;
-  colors: ReturnType<typeof useColors>;
-}) {
-  const isHigh = score >= 70;
-  const isMid = score >= 40 && score < 70;
-  const barColor = isHigh ? colors.scoreHigh : isMid ? colors.scoreMid : colors.scoreLow;
-  const badgeBg = isHigh ? colors.scoreHighBg : isMid ? colors.scoreMidBg : colors.scoreLowBg;
-  const badgeText = isHigh ? colors.scoreHigh : isMid ? colors.scoreMid : colors.scoreLow;
-
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ width: 80, fontSize: 12, color: colors.textSecondary, flexShrink: 0 }}>{label}</span>
-      <div style={{
-        flex: 1,
-        height: 6,
-        borderRadius: 9999,
-        backgroundColor: "rgba(156,163,175,0.2)",
-        overflow: "hidden",
-      }}>
-        <div style={{
-          width: `${score}%`,
-          height: "100%",
-          borderRadius: 9999,
-          backgroundColor: barColor,
-          transition: "width 0.4s ease",
-        }} />
-      </div>
-      <span style={{
-        width: 32,
-        padding: "1px 4px",
-        borderRadius: 4,
-        backgroundColor: badgeBg,
-        color: badgeText,
-        fontSize: 11,
-        fontWeight: 700,
-        textAlign: "center",
-        flexShrink: 0,
-      }}>
-        {score}
-      </span>
-    </div>
-  );
-}
 
 function SectionLabel({ children, colors }: { children: string; colors: ReturnType<typeof useColors> }) {
   return (
@@ -160,67 +92,40 @@ function SectionLabel({ children, colors }: { children: string; colors: ReturnTy
   );
 }
 
-function TopicChip({ topic, colors }: { topic: string; colors: ReturnType<typeof useColors> }) {
+function PerkPill({ label, colors }: { label: string; colors: ReturnType<typeof useColors> }) {
   return (
     <span style={{
       display: "inline-block",
-      padding: "2px 8px",
+      padding: "2px 10px",
       borderRadius: 9999,
-      backgroundColor: colors.tagBg,
-      color: colors.tagText,
+      backgroundColor: colors.perkBg,
+      color: colors.perkText,
       fontSize: 11,
-      fontWeight: 500,
+      fontWeight: 600,
+      lineHeight: "18px",
     }}>
-      {topic}
+      {label}
     </span>
   );
 }
 
-function RegisterInterestButton({
-  event,
-  colors,
-}: {
-  event: EventDetail;
-  colors: ReturnType<typeof useColors>;
-}) {
-  const { sendFollowUpMessage, openExternal } = useWidget<Props>();
-
-  function handleClick() {
-    if (event.logistics.website) {
-      openExternal(event.logistics.website);
-    } else {
-      sendFollowUpMessage(`I want to register my interest for "${event.title}". Can you help me?`);
-    }
-  }
-
-  return (
-    <button
-      onClick={handleClick}
-      style={{
-        width: "100%",
-        padding: "10px 16px",
-        borderRadius: 8,
-        border: "none",
-        backgroundColor: colors.ctaBg,
-        color: colors.ctaText,
-        fontSize: 14,
-        fontWeight: 600,
-        cursor: "pointer",
-        letterSpacing: "0.01em",
-      }}
-    >
-      Register Interest →
-    </button>
+function buildCalendarUrl(event: EventDetail) {
+  const title = encodeURIComponent(event.title);
+  const location = encodeURIComponent(event.location);
+  const details = encodeURIComponent(
+    `${event.attendeeProfile}\n${event.url || ""}`
   );
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&location=${location}&details=${details}`;
 }
 
 // ─── Main widget ──────────────────────────────────────────────────────────────
 
 export default function EventDetailWidget() {
-  const { props, isPending } = useWidget<Props>();
+  const { props, isPending, openExternal, callTool } = useWidget<Props>();
   const colors = useColors();
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
-  if (isPending) {
+  if (isPending || !props?.event) {
     return (
       <McpUseProvider autoSize>
         <div style={{ padding: 16, backgroundColor: colors.bg, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -233,169 +138,206 @@ export default function EventDetailWidget() {
   }
 
   const { event } = props;
-  const fmtCfg = FORMAT_CONFIG[event.format];
-  const priceLabel = event.price === "free" ? "Free" : `${event.currency}${event.priceAmount}`;
+  const siteUrl = event.logistics.website || event.url;
 
   return (
     <McpUseProvider autoSize>
       <div style={{
-        padding: 16,
+        padding: "16px 20px",
         backgroundColor: colors.bg,
         display: "flex",
         flexDirection: "column",
         gap: 16,
       }}>
-        {/* Header */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-            <span style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 3,
-              padding: "2px 8px",
-              borderRadius: 6,
-              backgroundColor: fmtCfg.bg,
-              color: fmtCfg.color,
-              fontSize: 11,
-              fontWeight: 600,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-            }}>
-              {fmtCfg.emoji} {fmtCfg.label}
-            </span>
-            <span style={{
-              padding: "2px 8px",
-              borderRadius: 9999,
-              backgroundColor: event.price === "free" ? colors.scoreHighBg : colors.accentBg,
-              color: event.price === "free" ? colors.scoreHigh : colors.accent,
-              fontSize: 12,
-              fontWeight: 600,
-            }}>
-              {priceLabel}
-            </span>
-          </div>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: colors.text, lineHeight: 1.3 }}>
-            {event.url ? (
-              <a href={event.url} target="_blank" rel="noopener noreferrer" style={{ color: colors.accent, textDecoration: "none" }}>
-                {event.title}
-              </a>
-            ) : (
-              event.title
-            )}
-          </h2>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            <span style={{ fontSize: 13, color: colors.textSecondary }}>📅 {event.date}</span>
-            <span style={{ fontSize: 13, color: colors.textSecondary }}>📍 {event.location}</span>
-            <span style={{ fontSize: 13, color: colors.textSecondary }}>👥 {event.attendeeProfile}</span>
-          </div>
-        </div>
+        {/* Title */}
+        <h2 style={{
+          margin: 0,
+          fontSize: 20,
+          fontWeight: 700,
+          color: colors.text,
+          lineHeight: 1.3,
+        }}>
+          {event.title}
+        </h2>
 
-        {/* Topics */}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-          {event.topics.map((t) => (
-            <TopicChip key={t} topic={t} colors={colors} />
-          ))}
-        </div>
+        {/* Date + duration */}
+        <span style={{ fontSize: 13, color: colors.textSecondary, marginTop: -8 }}>
+          {event.date}{event.logistics.duration ? ` \u2013 ${event.logistics.duration}` : ""}
+        </span>
 
         {/* Description */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <SectionLabel colors={colors}>About</SectionLabel>
-          <p style={{ margin: 0, fontSize: 13, color: colors.textSecondary, lineHeight: 1.6 }}>
-            {event.description}
-          </p>
-        </div>
-
-        {/* Fit score breakdown */}
-        <div style={{
-          backgroundColor: colors.cardBg,
-          border: `1px solid ${colors.border}`,
-          borderRadius: 10,
-          padding: 14,
-          display: "flex",
-          flexDirection: "column",
-          gap: 10,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <SectionLabel colors={colors}>Fit Score Breakdown</SectionLabel>
-            <span style={{
-              fontSize: 18,
-              fontWeight: 800,
-              color: event.fitScore >= 70 ? colors.scoreHigh : event.fitScore >= 40 ? colors.scoreMid : colors.scoreLow,
-              letterSpacing: "-0.03em",
+        {event.description && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <SectionLabel colors={colors}>Description</SectionLabel>
+            <p style={{
+              margin: 0,
+              fontSize: 14,
+              color: colors.textSecondary,
+              lineHeight: 1.7,
             }}>
-              {event.fitScore}
-            </span>
+              {event.description}
+            </p>
           </div>
-          <ScoreDimensionBar label="Topic"     score={event.scoreBreakdown.topic}     colors={colors} />
-          <ScoreDimensionBar label="Attendees" score={event.scoreBreakdown.attendees} colors={colors} />
-          <ScoreDimensionBar label="Schedule"  score={event.scoreBreakdown.schedule}  colors={colors} />
-          <ScoreDimensionBar label="Budget"    score={event.scoreBreakdown.budget}    colors={colors} />
-          <ScoreDimensionBar label="Size"      score={event.scoreBreakdown.size}      colors={colors} />
-          <p style={{ margin: 0, fontSize: 12, color: colors.textSecondary, lineHeight: 1.4, borderTop: `1px solid ${colors.border}`, paddingTop: 8 }}>
-            {event.fitReason}
-          </p>
-        </div>
-
-        {/* Agenda */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <SectionLabel colors={colors}>Agenda</SectionLabel>
-          <div style={{
-            backgroundColor: colors.cardBg,
-            border: `1px solid ${colors.border}`,
-            borderRadius: 10,
-            overflow: "hidden",
-          }}>
-            {event.agenda.map((item, i) => (
-              <div
-                key={i}
-                style={{
-                  padding: "9px 14px",
-                  fontSize: 13,
-                  color: colors.textSecondary,
-                  lineHeight: 1.4,
-                  borderBottom: i < event.agenda.length - 1 ? `1px solid ${colors.border}` : "none",
-                }}
-              >
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
 
         {/* Perks */}
+        {event.perks.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <SectionLabel colors={colors}>Perks</SectionLabel>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {event.perks.map((perk, i) => (
+                <PerkPill key={i} label={perk} colors={colors} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* At a Glance */}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          <SectionLabel colors={colors}>Perks</SectionLabel>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            {event.perks.map((perk, i) => (
-              <div key={i} style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                <span style={{ color: colors.scoreHigh, fontSize: 13, marginTop: 1 }}>✓</span>
-                <span style={{ fontSize: 13, color: colors.textSecondary, lineHeight: 1.4 }}>{perk}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Logistics */}
-        <div style={{
-          backgroundColor: colors.sectionBg,
-          borderRadius: 10,
-          padding: 14,
-          display: "flex",
-          flexDirection: "column",
-          gap: 6,
-        }}>
-          <SectionLabel colors={colors}>Logistics</SectionLabel>
-          <div style={{ display: "flex", flexDirection: "column", gap: 4, marginTop: 2 }}>
-            <span style={{ fontSize: 13, color: colors.textSecondary }}>🏛 {event.logistics.venue}</span>
-            <span style={{ fontSize: 13, color: colors.textSecondary }}>⏱ {event.logistics.duration}</span>
+          <SectionLabel colors={colors}>At a glance</SectionLabel>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: 8,
+          }}>
             {event.logistics.capacity && (
-              <span style={{ fontSize: 13, color: colors.textSecondary }}>👤 Up to {event.logistics.capacity} attendees</span>
+              <div style={{
+                backgroundColor: colors.metricBg,
+                border: `1px solid ${colors.metricBorder}`,
+                borderRadius: 8,
+                padding: "12px 14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+              }}>
+                <span style={{ fontSize: 16, fontWeight: 700, color: colors.text }}>
+                  {event.logistics.capacity}
+                </span>
+                <span style={{ fontSize: 11, color: colors.textMuted }}>attendees</span>
+              </div>
             )}
+            <div style={{
+              backgroundColor: colors.metricBg,
+              border: `1px solid ${colors.metricBorder}`,
+              borderRadius: 8,
+              padding: "12px 14px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}>
+              <span style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: colors.text,
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical" as const,
+                overflow: "hidden",
+              }}>
+                {event.attendeeProfile.split(",")[0].trim()}
+              </span>
+              <span style={{ fontSize: 11, color: colors.textMuted }}>organizer</span>
+            </div>
+            <div style={{
+              backgroundColor: colors.metricBg,
+              border: `1px solid ${colors.metricBorder}`,
+              borderRadius: 8,
+              padding: "12px 14px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+            }}>
+              <span style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: colors.text,
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical" as const,
+                overflow: "hidden",
+              }}>
+                {event.logistics.venue}
+              </span>
+              <span style={{ fontSize: 11, color: colors.textMuted }}>venue</span>
+            </div>
           </div>
         </div>
 
-        {/* CTA */}
-        <RegisterInterestButton event={event} colors={colors} />
+        {/* Action buttons */}
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+          <button
+            onClick={() => openExternal(buildCalendarUrl(event))}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "10px 20px",
+              borderRadius: 8,
+              border: `1px solid ${colors.border}`,
+              backgroundColor: "transparent",
+              color: colors.text,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: "pointer",
+              transition: "border-color 0.15s ease",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            Add to calendar
+          </button>
+          <button
+            onClick={async () => {
+              if (saveStatus !== "idle") return;
+              setSaveStatus("saving");
+              try {
+                await callTool("save-event", { eventId: event.id });
+                setSaveStatus("saved");
+              } catch {
+                setSaveStatus("error");
+              }
+            }}
+            disabled={saveStatus !== "idle"}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "10px 20px",
+              borderRadius: 8,
+              border: `1px solid ${saveStatus === "saved" ? colors.perkText : colors.border}`,
+              backgroundColor: saveStatus === "saved" ? colors.perkBg : "transparent",
+              color: saveStatus === "saved" ? colors.perkText : saveStatus === "error" ? "#f87171" : colors.text,
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: saveStatus === "idle" ? "pointer" : "default",
+              transition: "border-color 0.15s ease, background-color 0.15s ease",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            {saveStatus === "idle" ? "Save" : saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved" : "Error"}
+          </button>
+          {siteUrl && (
+            <button
+              onClick={() => openExternal(siteUrl)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "10px 20px",
+                borderRadius: 8,
+                border: `1px solid ${colors.border}`,
+                backgroundColor: "transparent",
+                color: colors.text,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "border-color 0.15s ease",
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Open in site
+            </button>
+          )}
+        </div>
       </div>
     </McpUseProvider>
   );

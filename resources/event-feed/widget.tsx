@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { McpUseProvider, useWidget, useWidgetTheme, type WidgetMetadata } from "mcp-use/react";
 import { z } from "zod";
 
@@ -39,6 +40,18 @@ export const widgetMetadata: WidgetMetadata = {
 type Props = z.infer<typeof propsSchema>;
 type EventCard = z.infer<typeof eventCardSchema>;
 
+type EventDetail = EventCard & {
+  description: string;
+  agenda: string[];
+  perks: string[];
+  logistics: { venue: string; duration: string; capacity?: number; website?: string };
+  scoreBreakdown: { topic: number; attendees: number; schedule: number; budget: number; size: number };
+};
+
+type ViewState =
+  | { view: "grid" }
+  | { view: "detail"; card: EventCard; detail: EventDetail | null; loading: boolean };
+
 // ─── Theme ────────────────────────────────────────────────────────────────────
 
 function useColors() {
@@ -51,331 +64,495 @@ function useColors() {
     text: dark ? "#f3f4f6" : "#111827",
     textSecondary: dark ? "#9ca3af" : "#6b7280",
     textMuted: dark ? "#6b7280" : "#9ca3af",
-    accent: dark ? "#818cf8" : "#6366f1",
-    accentBg: dark ? "#1e1b4b" : "#eef2ff",
-    scoreHigh: dark ? "#4ade80" : "#16a34a",
-    scoreMid: dark ? "#fcd34d" : "#d97706",
-    scoreLow: dark ? "#f87171" : "#dc2626",
-    scoreHighBg: dark ? "#052e16" : "#dcfce7",
-    scoreMidBg: dark ? "#451a03" : "#fef3c7",
-    scoreLowBg: dark ? "#450a0a" : "#fee2e2",
-    tagBg: dark ? "#1e3a5f" : "#dbeafe",
-    tagText: dark ? "#93c5fd" : "#1d4ed8",
+    accent: dark ? "#60a5fa" : "#2563eb",
+    accentBg: dark ? "#1e3a5f" : "#dbeafe",
+    topicBg: dark ? "#052e16" : "#dcfce7",
+    topicText: dark ? "#4ade80" : "#16a34a",
+    pricePaidBg: dark ? "#1e3a5f" : "#dbeafe",
+    pricePaidText: dark ? "#93c5fd" : "#1d4ed8",
+    networkingBg: dark ? "#2e1065" : "#ede9fe",
+    networkingText: dark ? "#a78bfa" : "#7c3aed",
+    perkBg: dark ? "#052e16" : "#dcfce7",
+    perkText: dark ? "#4ade80" : "#16a34a",
+    metricBg: dark ? "#1f2937" : "#f3f4f6",
+    metricBorder: dark ? "#374151" : "#e5e7eb",
   };
 }
 
-// ─── Source badge config ────────────────────────────────────────────────────────
+// ─── Source dot config ────────────────────────────────────────────────────────
 
-const SOURCE_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
-  luma:         { label: "Luma",         bg: "#f0eeff", color: "#5b4ccc" },
-  meetup:       { label: "Meetup",       bg: "#fff0f0", color: "#e02626" },
-  ticketmaster: { label: "Ticketmaster", bg: "#fff7e6", color: "#b45309" },
-  eventbrite:   { label: "Eventbrite",   bg: "#fff1eb", color: "#d1410c" },
-  linkedin:     { label: "LinkedIn",     bg: "#e8f3fb", color: "#0a66c2" },
-  predicthq:    { label: "PredictHQ",    bg: "#f0fdf4", color: "#166534" },
-  tickadoo:     { label: "Tickadoo",     bg: "#fdf2f8", color: "#9d174d" },
-  mock:         { label: "Demo",         bg: "#f3f4f6", color: "#6b7280" },
+const SOURCE_CONFIG: Record<string, { label: string; color: string }> = {
+  luma:         { label: "Luma",           color: "#5b4ccc" },
+  meetup:       { label: "Meetup",         color: "#e02626" },
+  ticketmaster: { label: "Ticketmaster",   color: "#b45309" },
+  eventbrite:   { label: "Eventbrite",     color: "#d1410c" },
+  linkedin:     { label: "LinkedIn",       color: "#0a66c2" },
+  predicthq:    { label: "PredictHQ",      color: "#166534" },
+  tickadoo:     { label: "Tickadoo",       color: "#9d174d" },
+  mock:         { label: "Google Events",  color: "#4285f4" },
 };
 
-// ─── Format badge config ────────────────────────────────────────────────────────
+// ─── Tag categorization ──────────────────────────────────────────────────────
 
-const FORMAT_CONFIG: Record<EventCard["format"], { label: string; emoji: string; bg: string; color: string }> = {
-  conference: { label: "Conference", emoji: "🎤", bg: "#ede9fe", color: "#7c3aed" },
-  meetup:     { label: "Meetup",     emoji: "🤝", bg: "#d1fae5", color: "#065f46" },
-  hackathon:  { label: "Hackathon",  emoji: "⚡", bg: "#fef3c7", color: "#92400e" },
-  workshop:   { label: "Workshop",   emoji: "🛠️", bg: "#fce7f3", color: "#9d174d" },
-  webinar:    { label: "Webinar",    emoji: "💻", bg: "#e0f2fe", color: "#0369a1" },
-};
+const NETWORKING_TOPICS = new Set(["networking", "startups", "co-founder", "fundraising", "business"]);
+
+function getTagStyle(topic: string, colors: ReturnType<typeof useColors>) {
+  if (NETWORKING_TOPICS.has(topic.toLowerCase())) {
+    return { bg: colors.networkingBg, text: colors.networkingText };
+  }
+  return { bg: colors.topicBg, text: colors.topicText };
+}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function SourceBadge({ source }: { source?: string }) {
-  const cfg = SOURCE_CONFIG[source || "mock"] || SOURCE_CONFIG.mock;
+function TagPill({ label, bg, color }: { label: string; bg: string; color: string }) {
   return (
     <span style={{
       display: "inline-block",
-      padding: "1px 6px",
-      borderRadius: 4,
-      backgroundColor: cfg.bg,
-      color: cfg.color,
-      fontSize: 10,
+      padding: "2px 10px",
+      borderRadius: 9999,
+      backgroundColor: bg,
+      color: color,
+      fontSize: 11,
       fontWeight: 600,
-      letterSpacing: "0.02em",
+      letterSpacing: "0.01em",
+      lineHeight: "18px",
     }}>
-      {cfg.label}
+      {label}
     </span>
   );
 }
 
-function FitScoreBar({ score, colors }: { score: number; colors: ReturnType<typeof useColors> }) {
-  const isHigh = score >= 70;
-  const isMid = score >= 40 && score < 70;
-
-  const barColor = isHigh ? colors.scoreHigh : isMid ? colors.scoreMid : colors.scoreLow;
-  const badgeBg = isHigh ? colors.scoreHighBg : isMid ? colors.scoreMidBg : colors.scoreLowBg;
-  const badgeText = isHigh ? colors.scoreHigh : isMid ? colors.scoreMid : colors.scoreLow;
-
+function SourceDot({ source, colors }: { source?: string; colors: ReturnType<typeof useColors> }) {
+  const cfg = SOURCE_CONFIG[source || "mock"] || SOURCE_CONFIG.mock;
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <div style={{
-        minWidth: 40,
-        padding: "2px 6px",
-        borderRadius: 6,
-        backgroundColor: badgeBg,
-        color: badgeText,
-        fontSize: 13,
-        fontWeight: 700,
-        textAlign: "center",
-        letterSpacing: "-0.02em",
-      }}>
-        {score}
-      </div>
-      <div style={{
-        flex: 1,
-        height: 6,
-        borderRadius: 9999,
-        backgroundColor: "rgba(156,163,175,0.2)",
-        overflow: "hidden",
-      }}>
-        <div style={{
-          width: `${score}%`,
-          height: "100%",
-          borderRadius: 9999,
-          backgroundColor: barColor,
-          transition: "width 0.4s ease",
-        }} />
-      </div>
+    <div style={{ display: "flex", alignItems: "center", gap: 5, marginTop: 2 }}>
+      <span style={{
+        display: "inline-block",
+        width: 7,
+        height: 7,
+        borderRadius: "50%",
+        backgroundColor: cfg.color,
+        flexShrink: 0,
+      }} />
+      <span style={{ fontSize: 11, color: colors.textMuted, fontWeight: 400 }}>
+        {cfg.label}
+      </span>
     </div>
   );
 }
 
-function TopicChip({ topic, colors }: { topic: string; colors: ReturnType<typeof useColors> }) {
+function SectionLabel({ children, colors }: { children: string; colors: ReturnType<typeof useColors> }) {
   return (
     <span style={{
-      display: "inline-block",
-      padding: "2px 8px",
-      borderRadius: 9999,
-      backgroundColor: colors.tagBg,
-      color: colors.tagText,
-      fontSize: 11,
-      fontWeight: 500,
-      letterSpacing: "0.01em",
-    }}>
-      {topic}
-    </span>
-  );
-}
-
-function FormatBadge({ format }: { format: EventCard["format"] }) {
-  const cfg = FORMAT_CONFIG[format];
-  return (
-    <span style={{
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 3,
-      padding: "2px 8px",
-      borderRadius: 6,
-      backgroundColor: cfg.bg,
-      color: cfg.color,
-      fontSize: 11,
-      fontWeight: 600,
-      textTransform: "uppercase",
-      letterSpacing: "0.05em",
-    }}>
-      {cfg.emoji} {cfg.label}
-    </span>
-  );
-}
-
-function PricePill({ event, colors }: { event: EventCard; colors: ReturnType<typeof useColors> }) {
-  if (event.price === "free") {
-    return (
-      <span style={{
-        padding: "2px 8px",
-        borderRadius: 9999,
-        backgroundColor: colors.scoreHighBg,
-        color: colors.scoreHigh,
-        fontSize: 12,
-        fontWeight: 600,
-      }}>
-        Free
-      </span>
-    );
-  }
-  return (
-    <span style={{
-      padding: "2px 8px",
-      borderRadius: 9999,
-      backgroundColor: colors.accentBg,
-      color: colors.accent,
-      fontSize: 12,
-      fontWeight: 600,
-    }}>
-      {event.currency}{event.priceAmount}
-    </span>
-  );
-}
-
-function EventCardItem({ event, colors }: { event: EventCard; colors: ReturnType<typeof useColors> }) {
-  const { sendFollowUpMessage } = useWidget<Props>();
-
-  const titleContent = (
-    <h3 style={{
-      margin: 0,
-      fontSize: 15,
+      fontSize: 10,
       fontWeight: 700,
-      color: event.url ? colors.accent : colors.text,
-      lineHeight: 1.3,
-      flex: 1,
-      textDecoration: "none",
+      color: colors.textMuted,
+      textTransform: "uppercase",
+      letterSpacing: "0.08em",
     }}>
-      {event.title}
-    </h3>
+      {children}
+    </span>
   );
+}
+
+// ─── Event Grid Card ──────────────────────────────────────────────────────────
+
+function EventGridCard({ event, colors, onSelect }: {
+  event: EventCard;
+  colors: ReturnType<typeof useColors>;
+  onSelect: (event: EventCard) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+
+  const priceLabel = event.price === "free"
+    ? "free"
+    : event.priceAmount
+      ? `${event.priceAmount} ${event.currency || "EUR"}`
+      : null;
+
+  const priceBg = event.price === "free" ? colors.topicBg : colors.pricePaidBg;
+  const priceColor = event.price === "free" ? colors.topicText : colors.pricePaidText;
 
   return (
     <div
-      onClick={() => sendFollowUpMessage(`Tell me more about event ${event.id}`)}
+      onClick={() => onSelect(event)}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       style={{
         backgroundColor: colors.cardBg,
-        border: `1px solid ${colors.border}`,
+        border: `1px solid ${hovered ? colors.accent + "55" : colors.border}`,
         borderRadius: 12,
-        padding: 16,
+        padding: "14px 16px",
         display: "flex",
         flexDirection: "column",
-        gap: 10,
+        gap: 6,
         cursor: "pointer",
+        transition: "border-color 0.15s ease, box-shadow 0.15s ease",
+        boxShadow: hovered
+          ? "0 4px 16px rgba(0,0,0,0.15)"
+          : "0 1px 3px rgba(0,0,0,0.06)",
       }}
     >
-      {/* Header row: source + title + format badge */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <SourceBadge source={event.source} />
-            <FormatBadge format={event.format} />
-          </div>
-          {event.url ? (
-            <a
-              href={event.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ textDecoration: "none" }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              {titleContent}
-            </a>
-          ) : (
-            titleContent
-          )}
-        </div>
+      {/* Date */}
+      <span style={{ fontSize: 12, color: colors.textMuted, fontWeight: 400 }}>
+        {event.date}
+      </span>
+
+      {/* Title */}
+      <h3 style={{
+        margin: 0,
+        fontSize: 15,
+        fontWeight: 700,
+        color: colors.text,
+        lineHeight: 1.3,
+        display: "-webkit-box",
+        WebkitLineClamp: 2,
+        WebkitBoxOrient: "vertical" as const,
+        overflow: "hidden",
+      }}>
+        {event.title}
+      </h3>
+
+      {/* Location */}
+      <span style={{ fontSize: 12, color: colors.textSecondary, fontWeight: 400 }}>
+        {event.location}
+      </span>
+
+      {/* Tags */}
+      <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginTop: 2 }}>
+        {event.topics.slice(0, 2).map((t) => {
+          const style = getTagStyle(t, colors);
+          return <TagPill key={t} label={t.toLowerCase()} bg={style.bg} color={style.text} />;
+        })}
+        {priceLabel && (
+          <TagPill label={priceLabel} bg={priceBg} color={priceColor} />
+        )}
       </div>
 
-      {/* Meta row: date, location, attendees */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-        <span style={{ fontSize: 12, color: colors.textSecondary, display: "flex", alignItems: "center", gap: 3 }}>
-          📅 {event.date}
-        </span>
-        <span style={{ fontSize: 12, color: colors.textSecondary, display: "flex", alignItems: "center", gap: 3 }}>
-          📍 {event.location}
-        </span>
-        <span style={{ fontSize: 12, color: colors.textMuted }}>
-          👥 {event.attendeeProfile}
-        </span>
-      </div>
-
-      {/* Topics + price row */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 4, alignItems: "center" }}>
-        {event.topics.map((t) => (
-          <TopicChip key={t} topic={t} colors={colors} />
-        ))}
-        <div style={{ marginLeft: "auto" }}>
-          <PricePill event={event} colors={colors} />
-        </div>
-      </div>
-
-      {/* Fit score */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <span style={{ fontSize: 11, fontWeight: 600, color: colors.textMuted, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-          Fit
-        </span>
-        <FitScoreBar score={event.fitScore} colors={colors} />
-        <p style={{ margin: 0, fontSize: 12, color: colors.textSecondary, lineHeight: 1.4 }}>
-          {event.fitReason}
-        </p>
-      </div>
-
-      {/* Click hint */}
-      <div style={{ textAlign: "right" }}>
-        <span style={{ fontSize: 11, color: colors.textMuted }}>Tap to see details →</span>
-      </div>
+      {/* Source */}
+      <SourceDot source={event.source} colors={colors} />
     </div>
   );
 }
 
-function SourceSummary({ sources }: { sources?: Record<string, number> }) {
-  if (!sources || Object.keys(sources).length <= 1) return null;
+// ─── Event Detail View (replaces grid) ────────────────────────────────────────
+
+function buildCalendarUrl(event: EventCard | EventDetail) {
+  const title = encodeURIComponent(event.title);
+  const location = encodeURIComponent(event.location);
+  const details = encodeURIComponent(
+    `${event.attendeeProfile}\n${event.url || ""}`
+  );
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&location=${location}&details=${details}`;
+}
+
+function EventDetailView({ card, detail, loading, onBack, colors }: {
+  card: EventCard;
+  detail: EventDetail | null;
+  loading: boolean;
+  onBack: () => void;
+  colors: ReturnType<typeof useColors>;
+}) {
+  const { openExternal, callTool } = useWidget<Props>();
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+
+  const event = detail || card;
+  const siteUrl = detail?.logistics?.website || detail?.url || card.url;
 
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-      {Object.entries(sources).map(([source, count]) => {
-        const cfg = SOURCE_CONFIG[source] || SOURCE_CONFIG.mock;
-        return (
-          <span key={source} style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 4,
-            padding: "2px 8px",
-            borderRadius: 9999,
-            backgroundColor: cfg.bg,
-            color: cfg.color,
-            fontSize: 11,
-            fontWeight: 600,
-          }}>
-            {cfg.label}: {count}
-          </span>
-        );
-      })}
+    <div style={{
+      padding: "16px 20px",
+      backgroundColor: colors.bg,
+      display: "flex",
+      flexDirection: "column",
+      gap: 16,
+    }}>
+      {/* Back link */}
+      <button
+        onClick={onBack}
+        style={{
+          background: "none",
+          border: "none",
+          padding: 0,
+          cursor: "pointer",
+          color: colors.accent,
+          fontSize: 13,
+          fontWeight: 500,
+          textAlign: "left",
+          display: "flex",
+          alignItems: "center",
+          gap: 4,
+        }}
+      >
+        Back to results
+      </button>
+
+      {/* Title */}
+      <h2 style={{
+        margin: 0,
+        fontSize: 20,
+        fontWeight: 700,
+        color: colors.text,
+        lineHeight: 1.3,
+      }}>
+        {event.title}
+      </h2>
+
+      {/* Date */}
+      <span style={{ fontSize: 13, color: colors.textSecondary, marginTop: -8 }}>
+        {event.date}{detail?.logistics?.duration ? ` \u2013 ${detail.logistics.duration}` : ""}
+      </span>
+
+      {/* Loading state */}
+      {loading && (
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, paddingTop: 8 }}>
+          {[80, 100, 60].map((w, i) => (
+            <div key={i} style={{
+              height: 12,
+              width: `${w}%`,
+              borderRadius: 4,
+              backgroundColor: colors.border,
+              opacity: 0.5,
+            }} />
+          ))}
+        </div>
+      )}
+
+      {/* Detail content */}
+      {detail && !loading && (
+        <>
+          {/* Description */}
+          {detail.description && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              <SectionLabel colors={colors}>Description</SectionLabel>
+              <p style={{
+                margin: 0,
+                fontSize: 14,
+                color: colors.textSecondary,
+                lineHeight: 1.7,
+              }}>
+                {detail.description}
+              </p>
+            </div>
+          )}
+
+          {/* Perks */}
+          {detail.perks.length > 0 && (
+            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <SectionLabel colors={colors}>Perks</SectionLabel>
+              <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+                {detail.perks.map((perk, i) => (
+                  <TagPill key={i} label={perk} bg={colors.perkBg} color={colors.perkText} />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* At a Glance */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <SectionLabel colors={colors}>At a glance</SectionLabel>
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(3, 1fr)",
+              gap: 8,
+            }}>
+              {detail.logistics.capacity && (
+                <div style={{
+                  backgroundColor: colors.metricBg,
+                  border: `1px solid ${colors.metricBorder}`,
+                  borderRadius: 8,
+                  padding: "12px 14px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 2,
+                }}>
+                  <span style={{ fontSize: 16, fontWeight: 700, color: colors.text }}>
+                    {detail.logistics.capacity}
+                  </span>
+                  <span style={{ fontSize: 11, color: colors.textMuted }}>attendees</span>
+                </div>
+              )}
+              <div style={{
+                backgroundColor: colors.metricBg,
+                border: `1px solid ${colors.metricBorder}`,
+                borderRadius: 8,
+                padding: "12px 14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+              }}>
+                <span style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: colors.text,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical" as const,
+                  overflow: "hidden",
+                }}>
+                  {detail.attendeeProfile.split(",")[0].trim()}
+                </span>
+                <span style={{ fontSize: 11, color: colors.textMuted }}>organizer</span>
+              </div>
+              <div style={{
+                backgroundColor: colors.metricBg,
+                border: `1px solid ${colors.metricBorder}`,
+                borderRadius: 8,
+                padding: "12px 14px",
+                display: "flex",
+                flexDirection: "column",
+                gap: 2,
+              }}>
+                <span style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: colors.text,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical" as const,
+                  overflow: "hidden",
+                }}>
+                  {detail.location}
+                </span>
+                <span style={{ fontSize: 11, color: colors.textMuted }}>distance</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+            <button
+              onClick={() => openExternal(buildCalendarUrl(event))}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "10px 20px",
+                borderRadius: 8,
+                border: `1px solid ${colors.border}`,
+                backgroundColor: "transparent",
+                color: colors.text,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "border-color 0.15s ease",
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              Add to calendar
+            </button>
+            <button
+              onClick={async () => {
+                if (saveStatus !== "idle") return;
+                setSaveStatus("saving");
+                try {
+                  await callTool("save-event", { eventId: event.id });
+                  setSaveStatus("saved");
+                } catch {
+                  setSaveStatus("error");
+                }
+              }}
+              disabled={saveStatus !== "idle"}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "10px 20px",
+                borderRadius: 8,
+                border: `1px solid ${saveStatus === "saved" ? colors.perkText : colors.border}`,
+                backgroundColor: saveStatus === "saved" ? colors.perkBg : "transparent",
+                color: saveStatus === "saved" ? colors.perkText : saveStatus === "error" ? "#f87171" : colors.text,
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: saveStatus === "idle" ? "pointer" : "default",
+                transition: "border-color 0.15s ease, background-color 0.15s ease",
+              }}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+              {saveStatus === "idle" ? "Save" : saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved" : "Error"}
+            </button>
+            {siteUrl && (
+              <button
+                onClick={() => openExternal(siteUrl)}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "10px 20px",
+                  borderRadius: 8,
+                  border: `1px solid ${colors.border}`,
+                  backgroundColor: "transparent",
+                  color: colors.text,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "border-color 0.15s ease",
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                Open in site
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
 }
+
+// ─── Loading Skeleton ─────────────────────────────────────────────────────────
 
 function LoadingSkeleton({ colors }: { colors: ReturnType<typeof useColors> }) {
   return (
-    <McpUseProvider autoSize>
-      <div style={{ padding: 16, backgroundColor: colors.bg, display: "flex", flexDirection: "column", gap: 12 }}>
+    <McpUseProvider>
+      <div style={{
+        backgroundColor: colors.bg,
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}>
         <div style={{
+          padding: "12px 16px 10px",
+          borderBottom: `1px solid ${colors.border}`,
           display: "flex",
           alignItems: "center",
-          gap: 8,
-          padding: "8px 0",
+          justifyContent: "space-between",
         }}>
-          <div style={{ height: 14, width: 120, borderRadius: 4, backgroundColor: colors.border, opacity: 0.6 }} />
-          <div style={{ height: 14, width: 80, borderRadius: 9999, backgroundColor: colors.border, opacity: 0.4 }} />
+          <div style={{ height: 14, width: 100, borderRadius: 4, backgroundColor: colors.border, opacity: 0.6 }} />
+          <div style={{ height: 20, width: 60, borderRadius: 9999, backgroundColor: colors.border, opacity: 0.4 }} />
         </div>
-        {[1, 2, 3].map((i) => (
-          <div key={i} style={{
-            backgroundColor: colors.cardBg,
-            border: `1px solid ${colors.border}`,
-            borderRadius: 12,
-            padding: 16,
-            display: "flex",
-            flexDirection: "column",
-            gap: 10,
-          }}>
-            <div style={{ display: "flex", gap: 6 }}>
-              <div style={{ height: 14, width: 60, borderRadius: 4, backgroundColor: colors.border, opacity: 0.5 }} />
-              <div style={{ height: 14, width: 80, borderRadius: 4, backgroundColor: colors.border, opacity: 0.5 }} />
+        <div style={{
+          flex: 1,
+          padding: "12px 16px",
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+          gap: 12,
+        }}>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} style={{
+              backgroundColor: colors.cardBg,
+              border: `1px solid ${colors.border}`,
+              borderRadius: 12,
+              padding: "14px 16px",
+              display: "flex",
+              flexDirection: "column",
+              gap: 8,
+            }}>
+              <div style={{ height: 10, width: "40%", borderRadius: 4, backgroundColor: colors.border, opacity: 0.4 }} />
+              <div style={{ height: 14, width: "80%", borderRadius: 4, backgroundColor: colors.border, opacity: 0.6 }} />
+              <div style={{ height: 10, width: "60%", borderRadius: 4, backgroundColor: colors.border, opacity: 0.3 }} />
+              <div style={{ display: "flex", gap: 4 }}>
+                <div style={{ width: 40, height: 16, borderRadius: 9999, backgroundColor: colors.border, opacity: 0.3 }} />
+                <div style={{ width: 32, height: 16, borderRadius: 9999, backgroundColor: colors.border, opacity: 0.3 }} />
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 2 }}>
+                <div style={{ width: 7, height: 7, borderRadius: "50%", backgroundColor: colors.border, opacity: 0.4 }} />
+                <div style={{ width: 50, height: 10, borderRadius: 4, backgroundColor: colors.border, opacity: 0.3 }} />
+              </div>
             </div>
-            <div style={{ height: 16, width: "70%", borderRadius: 4, backgroundColor: colors.border, opacity: 0.6 }} />
-            <div style={{ height: 12, width: "90%", borderRadius: 4, backgroundColor: colors.border, opacity: 0.3 }} />
-            <div style={{ display: "flex", gap: 4 }}>
-              {[50, 40, 60].map((w, j) => (
-                <div key={j} style={{ height: 18, width: w, borderRadius: 9999, backgroundColor: colors.border, opacity: 0.4 }} />
-              ))}
-            </div>
-            <div style={{ height: 6, width: "100%", borderRadius: 9999, backgroundColor: colors.border, opacity: 0.3 }} />
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </McpUseProvider>
   );
@@ -384,67 +561,120 @@ function LoadingSkeleton({ colors }: { colors: ReturnType<typeof useColors> }) {
 // ─── Main widget ──────────────────────────────────────────────────────────────
 
 export default function EventFeed() {
-  const { props, isPending } = useWidget<Props>();
+  const { props, isPending, callTool } = useWidget<Props>();
   const colors = useColors();
+  const [viewState, setViewState] = useState<ViewState>({ view: "grid" });
 
   if (isPending) {
     return <LoadingSkeleton colors={colors} />;
   }
 
-  const { query, events, sources } = props;
+  const { query, events } = props;
   const sorted = [...events].sort((a, b) => b.fitScore - a.fitScore);
+
+  async function handleSelectCard(event: EventCard) {
+    setViewState({ view: "detail", card: event, detail: null, loading: true });
+    try {
+      const res = await callTool("get-event-detail", { id: event.id });
+      const detail = (res.structuredContent as any)?.event as EventDetail | undefined;
+      setViewState((prev) =>
+        prev.view === "detail"
+          ? { ...prev, detail: detail || null, loading: false }
+          : prev
+      );
+    } catch {
+      setViewState((prev) =>
+        prev.view === "detail" ? { ...prev, loading: false } : prev
+      );
+    }
+  }
+
+  // ─── Detail view ──────────────────────────────────────────────────────────
+
+  if (viewState.view === "detail") {
+    return (
+      <McpUseProvider autoSize>
+        <EventDetailView
+          card={viewState.card}
+          detail={viewState.detail}
+          loading={viewState.loading}
+          onBack={() => setViewState({ view: "grid" })}
+          colors={colors}
+        />
+      </McpUseProvider>
+    );
+  }
+
+  // ─── Grid view ────────────────────────────────────────────────────────────
 
   return (
     <McpUseProvider autoSize>
       <div style={{
-        padding: 16,
-        backgroundColor: colors.bg,
         display: "flex",
         flexDirection: "column",
-        gap: 12,
+        backgroundColor: colors.bg,
+        overflow: "hidden",
       }}>
         {/* Header */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <h2 style={{
-              margin: 0,
-              fontSize: 16,
-              fontWeight: 700,
-              color: colors.text,
-            }}>
-              {query ? `Events: "${query}"` : "All Events"}
-            </h2>
-            <span style={{
-              padding: "3px 10px",
-              borderRadius: 9999,
-              backgroundColor: colors.accentBg,
-              color: colors.accent,
-              fontSize: 12,
-              fontWeight: 600,
-            }}>
-              {events.length} found
-            </span>
-          </div>
-          <SourceSummary sources={sources} />
+        <div style={{
+          padding: "12px 16px 10px",
+          borderBottom: `1px solid ${colors.border}`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexShrink: 0,
+        }}>
+          <h2 style={{
+            margin: 0,
+            fontSize: 15,
+            fontWeight: 700,
+            color: colors.text,
+            letterSpacing: "-0.01em",
+          }}>
+            {query ? `"${query}"` : "All Events"}
+          </h2>
+          <span style={{
+            padding: "3px 10px",
+            borderRadius: 9999,
+            backgroundColor: colors.accentBg,
+            color: colors.accent,
+            fontSize: 12,
+            fontWeight: 600,
+          }}>
+            {events.length} found
+          </span>
         </div>
 
-        {/* Event list */}
-        {sorted.length === 0 ? (
-          <div style={{
-            padding: "40px 20px",
-            textAlign: "center",
-            color: colors.textMuted,
-          }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
-            <p style={{ margin: 0, fontSize: 14 }}>
-              No events found{query ? ` matching "${query}"` : ""}. Try a different keyword.
-            </p>
-          </div>
-        ) : (
-          sorted.map((event) => (
-            <EventCardItem key={event.id} event={event} colors={colors} />
-          ))
-        )}
+        {/* Event grid */}
+        <div style={{
+          padding: "12px 16px",
+          display: sorted.length === 0 ? "flex" : "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+          gap: 12,
+          overflowY: "auto",
+        }}>
+          {sorted.length === 0 ? (
+            <div style={{
+              padding: "40px 20px",
+              textAlign: "center",
+              color: colors.textMuted,
+              width: "100%",
+            }}>
+              <p style={{ margin: 0, fontSize: 13 }}>
+                No events found{query ? ` matching "${query}"` : ""}. Try a different keyword.
+              </p>
+            </div>
+          ) : (
+            sorted.map((event) => (
+              <EventGridCard
+                key={event.id}
+                event={event}
+                colors={colors}
+                onSelect={handleSelectCard}
+              />
+            ))
+          )}
+        </div>
       </div>
     </McpUseProvider>
   );
