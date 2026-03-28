@@ -17,7 +17,7 @@ const eventDetailSchema = z.object({
   title: z.string(),
   date: z.string(),
   location: z.string(),
-  format: z.enum(["conference", "meetup", "hackathon", "workshop", "webinar"]),
+  format: z.enum(["conference", "meetup", "hackathon", "workshop", "webinar", "festival", "concert", "networking"]),
   price: z.enum(["free", "paid", "unknown"]),
   priceAmount: z.number().optional(),
   currency: z.string().optional(),
@@ -110,12 +110,82 @@ function PerkPill({ label, colors }: { label: string; colors: ReturnType<typeof 
 }
 
 function buildCalendarUrl(event: EventDetail) {
-  const title = encodeURIComponent(event.title);
-  const location = encodeURIComponent(event.location);
-  const details = encodeURIComponent(
-    `${event.attendeeProfile}\n${event.url || ""}`
-  );
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&location=${location}&details=${details}`;
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const fmtYMD = (d: Date) =>
+    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+  const fmtFull = (d: Date) =>
+    `${fmtYMD(d)}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+
+  let startDate: Date;
+  let endDate: Date;
+  let allDay = true;
+
+  try {
+    const dateStr = event.date;
+
+    // "May 7, 2026, 09:00–May 9, 2026, 18:00" (multi-day with times)
+    const multiDayTime = dateStr.match(
+      /^(\w+ \d+, \d{4}),?\s*(\d{2}:\d{2})\s*[–\-]\s*(\w+ \d+, \d{4}),?\s*(\d{2}:\d{2})$/
+    );
+    if (multiDayTime) {
+      startDate = new Date(`${multiDayTime[1]} ${multiDayTime[2]}`);
+      endDate = new Date(`${multiDayTime[3]} ${multiDayTime[4]}`);
+      allDay = false;
+    } else {
+      // "May 19, 2026, 09:00–18:00" (single day with time range)
+      const singleDayTime = dateStr.match(
+        /^(\w+ \d+, \d{4}),?\s*(\d{2}:\d{2})\s*[–\-]\s*(\d{2}:\d{2})$/
+      );
+      if (singleDayTime) {
+        startDate = new Date(`${singleDayTime[1]} ${singleDayTime[2]}`);
+        endDate = new Date(`${singleDayTime[1]} ${singleDayTime[3]}`);
+        allDay = false;
+      } else {
+        // "Apr 20–21, 2026" (date range, all day)
+        const rangeMatch = dateStr.match(
+          /^(\w+ \d+)\s*[–\-]\s*(\d+),?\s*(\d{4})$/
+        );
+        if (rangeMatch) {
+          startDate = new Date(`${rangeMatch[1]}, ${rangeMatch[3]}`);
+          endDate = new Date(startDate);
+          endDate.setDate(parseInt(rangeMatch[2], 10) + 1);
+        } else {
+          startDate = new Date(dateStr);
+          endDate = new Date(startDate);
+          endDate.setDate(endDate.getDate() + 1);
+        }
+      }
+    }
+
+    if (isNaN(startDate!.getTime())) throw new Error("bad date");
+  } catch {
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() + 1);
+    endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+  }
+
+  const dates = allDay
+    ? `${fmtYMD(startDate!)}/${fmtYMD(endDate!)}`
+    : `${fmtFull(startDate!)}/${fmtFull(endDate!)}`;
+
+  const details = [
+    event.attendeeProfile,
+    event.url && `More info: ${event.url}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n")
+    .slice(0, 1000);
+
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: event.title,
+    dates,
+    location: event.location,
+    details,
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
 // ─── Main widget ──────────────────────────────────────────────────────────────

@@ -9,7 +9,7 @@ const eventCardSchema = z.object({
   title: z.string(),
   date: z.string(),
   location: z.string(),
-  format: z.enum(["conference", "meetup", "hackathon", "workshop", "webinar"]),
+  format: z.enum(["conference", "meetup", "hackathon", "workshop", "webinar", "festival", "concert", "networking"]),
   price: z.enum(["free", "paid", "unknown"]),
   priceAmount: z.number().optional(),
   currency: z.string().optional(),
@@ -50,7 +50,8 @@ type EventDetail = EventCard & {
 
 type ViewState =
   | { view: "grid" }
-  | { view: "detail"; card: EventCard; detail: EventDetail | null; loading: boolean };
+  | { view: "detail"; card: EventCard; detail: EventDetail | null; loading: boolean; returnTo: "grid" | "saved" }
+  | { view: "saved"; events: EventCard[]; loading: boolean };
 
 // ─── Theme ────────────────────────────────────────────────────────────────────
 
@@ -239,23 +240,96 @@ function EventGridCard({ event, colors, onSelect }: {
 // ─── Event Detail View (replaces grid) ────────────────────────────────────────
 
 function buildCalendarUrl(event: EventCard | EventDetail) {
-  const title = encodeURIComponent(event.title);
-  const location = encodeURIComponent(event.location);
-  const details = encodeURIComponent(
-    `${event.attendeeProfile}\n${event.url || ""}`
-  );
-  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&location=${location}&details=${details}`;
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  const fmtYMD = (d: Date) =>
+    `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}`;
+  const fmtFull = (d: Date) =>
+    `${fmtYMD(d)}T${pad(d.getHours())}${pad(d.getMinutes())}00`;
+
+  let startDate: Date;
+  let endDate: Date;
+  let allDay = true;
+
+  try {
+    const dateStr = event.date;
+
+    // "May 7, 2026, 09:00–May 9, 2026, 18:00" (multi-day with times)
+    const multiDayTime = dateStr.match(
+      /^(\w+ \d+, \d{4}),?\s*(\d{2}:\d{2})\s*[–\-]\s*(\w+ \d+, \d{4}),?\s*(\d{2}:\d{2})$/
+    );
+    if (multiDayTime) {
+      startDate = new Date(`${multiDayTime[1]} ${multiDayTime[2]}`);
+      endDate = new Date(`${multiDayTime[3]} ${multiDayTime[4]}`);
+      allDay = false;
+    } else {
+      // "May 19, 2026, 09:00–18:00" (single day with time range)
+      const singleDayTime = dateStr.match(
+        /^(\w+ \d+, \d{4}),?\s*(\d{2}:\d{2})\s*[–\-]\s*(\d{2}:\d{2})$/
+      );
+      if (singleDayTime) {
+        startDate = new Date(`${singleDayTime[1]} ${singleDayTime[2]}`);
+        endDate = new Date(`${singleDayTime[1]} ${singleDayTime[3]}`);
+        allDay = false;
+      } else {
+        // "Apr 20–21, 2026" (date range, all day)
+        const rangeMatch = dateStr.match(
+          /^(\w+ \d+)\s*[–\-]\s*(\d+),?\s*(\d{4})$/
+        );
+        if (rangeMatch) {
+          startDate = new Date(`${rangeMatch[1]}, ${rangeMatch[3]}`);
+          endDate = new Date(startDate);
+          endDate.setDate(parseInt(rangeMatch[2], 10) + 1);
+        } else {
+          startDate = new Date(dateStr);
+          endDate = new Date(startDate);
+          endDate.setDate(endDate.getDate() + 1);
+        }
+      }
+    }
+
+    if (isNaN(startDate!.getTime())) throw new Error("bad date");
+  } catch {
+    startDate = new Date();
+    startDate.setDate(startDate.getDate() + 1);
+    endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 1);
+  }
+
+  const dates = allDay
+    ? `${fmtYMD(startDate!)}/${fmtYMD(endDate!)}`
+    : `${fmtFull(startDate!)}/${fmtFull(endDate!)}`;
+
+  const details = [
+    event.attendeeProfile,
+    event.url && `More info: ${event.url}`,
+  ]
+    .filter(Boolean)
+    .join("\n\n")
+    .slice(0, 1000);
+
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: event.title,
+    dates,
+    location: event.location,
+    details,
+  });
+
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-function EventDetailView({ card, detail, loading, onBack, colors }: {
+function EventDetailView({ card, detail, loading, onBack, colors, isSavedView, onUnsaved }: {
   card: EventCard;
   detail: EventDetail | null;
   loading: boolean;
   onBack: () => void;
   colors: ReturnType<typeof useColors>;
+  isSavedView?: boolean;
+  onUnsaved?: (eventId: string) => void;
 }) {
   const { openExternal, callTool } = useWidget<Props>();
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [removeStatus, setRemoveStatus] = useState<"idle" | "removing" | "removed" | "error">("idle");
 
   const event = detail || card;
   const siteUrl = detail?.logistics?.website || detail?.url || card.url;
@@ -285,7 +359,7 @@ function EventDetailView({ card, detail, loading, onBack, colors }: {
           gap: 4,
         }}
       >
-        Back to results
+        {isSavedView ? "Back to saved events" : "Back to results"}
       </button>
 
       {/* Title */}
@@ -442,36 +516,70 @@ function EventDetailView({ card, detail, loading, onBack, colors }: {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
               Add to calendar
             </button>
-            <button
-              onClick={async () => {
-                if (saveStatus !== "idle") return;
-                setSaveStatus("saving");
-                try {
-                  await callTool("save-event", { eventId: event.id });
-                  setSaveStatus("saved");
-                } catch {
-                  setSaveStatus("error");
-                }
-              }}
-              disabled={saveStatus !== "idle"}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 6,
-                padding: "10px 20px",
-                borderRadius: 8,
-                border: `1px solid ${saveStatus === "saved" ? colors.perkText : colors.border}`,
-                backgroundColor: saveStatus === "saved" ? colors.perkBg : "transparent",
-                color: saveStatus === "saved" ? colors.perkText : saveStatus === "error" ? "#f87171" : colors.text,
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: saveStatus === "idle" ? "pointer" : "default",
-                transition: "border-color 0.15s ease, background-color 0.15s ease",
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-              {saveStatus === "idle" ? "Save" : saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved" : "Error"}
-            </button>
+            {isSavedView ? (
+              <button
+                onClick={async () => {
+                  if (removeStatus !== "idle") return;
+                  setRemoveStatus("removing");
+                  try {
+                    await callTool("unsave-event", { eventId: event.id });
+                    setRemoveStatus("removed");
+                    onUnsaved?.(event.id);
+                  } catch {
+                    setRemoveStatus("error");
+                  }
+                }}
+                disabled={removeStatus !== "idle"}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "10px 20px",
+                  borderRadius: 8,
+                  border: `1px solid ${removeStatus === "removed" ? colors.textMuted : removeStatus === "error" ? "#f87171" : colors.border}`,
+                  backgroundColor: removeStatus === "removed" ? colors.metricBg : "transparent",
+                  color: removeStatus === "removed" ? colors.textMuted : removeStatus === "error" ? "#f87171" : colors.text,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: removeStatus === "idle" ? "pointer" : "default",
+                  transition: "border-color 0.15s ease, background-color 0.15s ease",
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill={removeStatus === "idle" ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                {removeStatus === "idle" ? "Remove from saved" : removeStatus === "removing" ? "Removing..." : removeStatus === "removed" ? "Removed" : "Error"}
+              </button>
+            ) : (
+              <button
+                onClick={async () => {
+                  if (saveStatus !== "idle") return;
+                  setSaveStatus("saving");
+                  try {
+                    await callTool("save-event", { eventId: event.id });
+                    setSaveStatus("saved");
+                  } catch {
+                    setSaveStatus("error");
+                  }
+                }}
+                disabled={saveStatus !== "idle"}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "10px 20px",
+                  borderRadius: 8,
+                  border: `1px solid ${saveStatus === "saved" ? colors.perkText : colors.border}`,
+                  backgroundColor: saveStatus === "saved" ? colors.perkBg : "transparent",
+                  color: saveStatus === "saved" ? colors.perkText : saveStatus === "error" ? "#f87171" : colors.text,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  cursor: saveStatus === "idle" ? "pointer" : "default",
+                  transition: "border-color 0.15s ease, background-color 0.15s ease",
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                {saveStatus === "idle" ? "Save" : saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved" : "Error"}
+              </button>
+            )}
             {siteUrl && (
               <button
                 onClick={() => openExternal(siteUrl)}
@@ -564,6 +672,7 @@ export default function EventFeed() {
   const { props, isPending, callTool } = useWidget<Props>();
   const colors = useColors();
   const [viewState, setViewState] = useState<ViewState>({ view: "grid" });
+  const [removedIds, setRemovedIds] = useState<Set<string>>(new Set());
 
   if (isPending) {
     return <LoadingSkeleton colors={colors} />;
@@ -571,9 +680,10 @@ export default function EventFeed() {
 
   const { query, events } = props;
   const sorted = [...events].sort((a, b) => b.fitScore - a.fitScore);
+  const isSavedProps = query === "saved";
 
-  async function handleSelectCard(event: EventCard) {
-    setViewState({ view: "detail", card: event, detail: null, loading: true });
+  async function handleSelectCard(event: EventCard, returnTo: "grid" | "saved" = "grid") {
+    setViewState({ view: "detail", card: event, detail: null, loading: true, returnTo });
     try {
       const res = await callTool("get-event-detail", { id: event.id });
       const detail = (res.structuredContent as any)?.event as EventDetail | undefined;
@@ -589,18 +699,147 @@ export default function EventFeed() {
     }
   }
 
+  async function handleViewSaved() {
+    setViewState({ view: "saved", events: [], loading: true });
+    setRemovedIds(new Set());
+    try {
+      const res = await callTool("get-saved-events", {});
+      const savedEvents = ((res.structuredContent as any)?.events ?? []) as EventCard[];
+      setViewState({ view: "saved", events: savedEvents, loading: false });
+    } catch {
+      setViewState({ view: "saved", events: [], loading: false });
+    }
+  }
+
+  function handleUnsaved(eventId: string) {
+    setRemovedIds((prev) => new Set(prev).add(eventId));
+  }
+
   // ─── Detail view ──────────────────────────────────────────────────────────
 
   if (viewState.view === "detail") {
+    const fromSaved = viewState.returnTo === "saved";
     return (
       <McpUseProvider autoSize>
         <EventDetailView
           card={viewState.card}
           detail={viewState.detail}
           loading={viewState.loading}
-          onBack={() => setViewState({ view: "grid" })}
+          onBack={() => {
+            if (fromSaved) {
+              handleViewSaved();
+            } else {
+              setViewState({ view: "grid" });
+            }
+          }}
           colors={colors}
+          isSavedView={fromSaved || isSavedProps}
+          onUnsaved={handleUnsaved}
         />
+      </McpUseProvider>
+    );
+  }
+
+  // ─── Saved events view ──────────────────────────────────────────────────────
+
+  if (viewState.view === "saved") {
+    if (viewState.loading) {
+      return <LoadingSkeleton colors={colors} />;
+    }
+
+    const savedFiltered = viewState.events.filter((e) => !removedIds.has(e.id));
+    const savedSorted = [...savedFiltered].sort((a, b) => b.fitScore - a.fitScore);
+
+    return (
+      <McpUseProvider autoSize>
+        <div style={{
+          display: "flex",
+          flexDirection: "column",
+          backgroundColor: colors.bg,
+          overflow: "hidden",
+        }}>
+          {/* Header */}
+          <div style={{
+            padding: "12px 16px 10px",
+            borderBottom: `1px solid ${colors.border}`,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            flexShrink: 0,
+          }}>
+            <button
+              onClick={() => setViewState({ view: "grid" })}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                color: colors.accent,
+                fontSize: 13,
+                fontWeight: 500,
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                flexShrink: 0,
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              Back
+            </button>
+            <h2 style={{
+              margin: 0,
+              fontSize: 15,
+              fontWeight: 700,
+              color: colors.text,
+              letterSpacing: "-0.01em",
+              flex: 1,
+            }}>
+              Your Saved Events
+            </h2>
+            <span style={{
+              padding: "3px 10px",
+              borderRadius: 9999,
+              backgroundColor: colors.accentBg,
+              color: colors.accent,
+              fontSize: 12,
+              fontWeight: 600,
+            }}>
+              {savedFiltered.length} saved
+            </span>
+          </div>
+
+          {/* Saved events grid */}
+          <div style={{
+            padding: "12px 16px",
+            display: savedSorted.length === 0 ? "flex" : "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))",
+            gap: 12,
+            overflowY: "auto",
+          }}>
+            {savedSorted.length === 0 ? (
+              <div style={{
+                padding: "40px 20px",
+                textAlign: "center",
+                color: colors.textMuted,
+                width: "100%",
+              }}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke={colors.textMuted} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: 12, opacity: 0.5 }}><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                <p style={{ margin: 0, fontSize: 13 }}>
+                  You haven't saved any events yet. Browse events and tap Save to bookmark them.
+                </p>
+              </div>
+            ) : (
+              savedSorted.map((event) => (
+                <EventGridCard
+                  key={event.id}
+                  event={event}
+                  colors={colors}
+                  onSelect={(e) => handleSelectCard(e, "saved")}
+                />
+              ))
+            )}
+          </div>
+        </div>
       </McpUseProvider>
     );
   }
@@ -631,18 +870,43 @@ export default function EventFeed() {
             color: colors.text,
             letterSpacing: "-0.01em",
           }}>
-            {query ? `"${query}"` : "All Events"}
+            {isSavedProps ? "Your Saved Events" : query ? `"${query}"` : "All Events"}
           </h2>
-          <span style={{
-            padding: "3px 10px",
-            borderRadius: 9999,
-            backgroundColor: colors.accentBg,
-            color: colors.accent,
-            fontSize: 12,
-            fontWeight: 600,
-          }}>
-            {events.length} found
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{
+              padding: "3px 10px",
+              borderRadius: 9999,
+              backgroundColor: colors.accentBg,
+              color: colors.accent,
+              fontSize: 12,
+              fontWeight: 600,
+            }}>
+              {events.length} {isSavedProps ? "saved" : "found"}
+            </span>
+            {!isSavedProps && (
+              <button
+                onClick={handleViewSaved}
+                title="View saved events"
+                style={{
+                  background: "none",
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: 8,
+                  padding: "4px 8px",
+                  cursor: "pointer",
+                  color: colors.textSecondary,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  transition: "border-color 0.15s ease, color 0.15s ease",
+                }}
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                Saved
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Event grid */}

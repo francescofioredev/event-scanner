@@ -5,11 +5,8 @@ import { filterByQuery, buildGoogleCalendarUrl } from "@/helpers";
 import { findLiveEvents } from "@/sources";
 import { getUserProfile, updateUserProfile, isDefaultProfile } from "@/user-profile";
 import { getSavedEvents, saveEvent, unsaveEvent } from "@/supabase";
-import rawEventDetails from "@/data/mock-event-details.json";
 import { getConsentPageHtml } from "@/oauth-consent";
 import type { EventCard, EventDetail } from "@/types";
-
-const MOCK_EVENT_DETAILS: EventDetail[] = rawEventDetails as EventDetail[];
 
 // In-memory cache of events returned by tools (for the save-event lookup)
 const eventCache = new Map<string, EventCard>();
@@ -90,6 +87,7 @@ server.tool(
     schema: z.object({
       query: z
         .string()
+        .optional()
         .describe("What kind of events to find — topic, location, format, date, or any natural phrase."),
       location: z
         .string()
@@ -154,31 +152,28 @@ server.tool(
     },
   },
   async ({ id }, _ctx) => {
-    let detail: EventDetail | undefined = MOCK_EVENT_DETAILS.find((e) => e.id === id);
+    let detail: EventDetail | undefined;
 
-    // Fallback: build detail from cached live event (find-events results)
-    if (!detail) {
-      const cached = eventCache.get(id);
-      if (cached) {
-        detail = {
-          ...cached,
-          description: `${cached.title} — live event sourced from ${cached.source}.${cached.url ? ` Visit the event page for full details.` : ""}`,
-          agenda: [],
-          perks: [],
-          logistics: {
-            venue: cached.location,
-            duration: "See event page",
-            website: cached.url,
-          },
-          scoreBreakdown: {
-            topic: cached.fitScore,
-            attendees: cached.fitScore,
-            schedule: cached.fitScore,
-            budget: cached.fitScore,
-            size: cached.fitScore,
-          },
-        };
-      }
+    const cached = eventCache.get(id);
+    if (cached) {
+      detail = {
+        ...cached,
+        description: `${cached.title} — sourced from ${cached.source}.${cached.url ? ` Visit the event page for full details.` : ""}`,
+        agenda: [],
+        perks: [],
+        logistics: {
+          venue: cached.location,
+          duration: "See event page",
+          website: cached.url,
+        },
+        scoreBreakdown: {
+          topic: cached.fitScore,
+          attendees: cached.fitScore,
+          schedule: cached.fitScore,
+          budget: cached.fitScore,
+          size: cached.fitScore,
+        },
+      };
     }
 
     if (!detail) {

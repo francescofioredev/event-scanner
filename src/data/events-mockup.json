@@ -19,7 +19,7 @@
     "fitScore": 91,
     "fitReason": "Europe's largest AI event — directly aligned with AI adoption, fintech, and startup tracks. Two full days with 700+ speakers across 17 stages.",
     "attendeeProfile": "Entrepreneurs, managers, startup founders, innovation leaders, AI practitioners",
-    "source": "aiweek.it",
+    "source": "mock",
     "url": "https://www.aiweek.it/en/"
   },
   {
@@ -41,7 +41,7 @@
     "fitScore": 74,
     "fitReason": "Strong technical content on AI and cloud security. Free community event run by the UNIMI cybersecurity team — good for networking with security researchers.",
     "attendeeProfile": "Security professionals, students, ethical hackers, IT administrators",
-    "source": "eventbrite.com",
+    "source": "eventbrite",
     "url": "https://www.eventbrite.com/e/milan0day-2026-cybersecurity-conference-tickets-1984064435135"
   },
   {
@@ -64,7 +64,7 @@
     "fitScore": 58,
     "fitReason": "10th anniversary edition with AI and innovation tracks. Relevant for product thinking but skews toward creative agencies rather than tech builders.",
     "attendeeProfile": "Digital designers, creative directors, brand managers, product designers, agency professionals",
-    "source": "eventbrite.com",
+    "source": "eventbrite",
     "url": "https://www.eventbrite.com/e/digital-design-days-milano-tickets-1028110946517"
   },
   {
@@ -87,7 +87,7 @@
     "fitScore": 95,
     "fitReason": "Directly aligned with Homepay's core domain — digital wallets, biometric payments, and regulatory evolution in Italian/EU payment infrastructure.",
     "attendeeProfile": "Fintech professionals, bank executives, payment operators, regulators, startup founders",
-    "source": "eventbrite.com",
+    "source": "eventbrite",
     "url": "https://www.eventbrite.com/d/italy--milano/tech-events/"
   },
   {
@@ -110,7 +110,7 @@
     "fitScore": 82,
     "fitReason": "3-day AI hackathon at PoliMi — excellent for developer networking and discovering early-stage AI projects. €15K+ in prizes, 160 builders, 40 teams.",
     "attendeeProfile": "Developers, students, ML engineers, startup builders, tech mentors",
-    "source": "gdgaihack.com",
+    "source": "mock",
     "url": "https://www.gdgaihack.com/"
   },
   {
@@ -131,7 +131,7 @@
     "fitScore": 70,
     "fitReason": "Relaxed monthly networking for tech founders and enthusiasts. Low commitment, good for informal deal-making and ecosystem connections in Milan.",
     "attendeeProfile": "Tech founders, startup enthusiasts, developers, aspiring entrepreneurs",
-    "source": "meetup.com",
+    "source": "meetup",
     "url": "https://www.meetup.com/tech-startups-in-the-pub-relaxed-networking/"
   },
   {
@@ -154,7 +154,7 @@
     "fitScore": 78,
     "fitReason": "Hands-on technical workshop on combining blockchain and AI — relevant to payment infrastructure and tokenization themes Homepay operates in.",
     "attendeeProfile": "Blockchain developers, AI engineers, fintech builders, Web3 investors",
-    "source": "eventbrite.com",
+    "source": "eventbrite",
     "url": "https://www.eventbrite.com/d/italy--milano/technology-conference/"
   },
   {
@@ -176,7 +176,7 @@
     "fitScore": 86,
     "fitReason": "Top-tier VC and investor event in Milan's financial district — high-value networking for fundraising conversations and partner discovery.",
     "attendeeProfile": "VCs, angel investors, startup founders, fund managers, institutional investors",
-    "source": "eventbrite.com",
+    "source": "eventbrite",
     "url": "https://www.eventbrite.com/d/italy--milano/business--events/international/"
   },
   {
@@ -198,7 +198,7 @@
     "fitScore": 83,
     "fitReason": "Hands-on LLM fine-tuning workshop running on Google Colab — practical AI skills directly applicable to building AI-powered products.",
     "attendeeProfile": "ML engineers, developers, AI enthusiasts, students",
-    "source": "gdg.community.dev",
+    "source": "mock",
     "url": "https://gdg.community.dev/gdg-on-campus-polytechnic-university-of-milan/"
   },
   {
@@ -221,7 +221,7 @@
     "fitScore": 98,
     "fitReason": "Italy's premier payments conference — 3-day event covering digital euro, CBDC, BNPL, open banking, and fintech-bank collaboration. Directly core to Homepay's domain.",
     "attendeeProfile": "Banking executives, payment operators, fintech founders, regulators, central bankers",
-    "source": "abieventi.it",
+    "source": "mock",
     "url": "https://www.abieventi.it/contents/news/2025/salone-dei-pagamenti-2025"
   },
   {
@@ -243,7 +243,7 @@
     "fitScore": 98,
     "fitReason": "Italy's top electronic music festival — 150+ DJs across 3 days including Four Tet, Floating Points, Amelie Lens, Ben Klock, Marcel Dettmann. Ranked 6th in DJ Mag's Top 100 Festivals. Sold out — waitlist only.",
     "attendeeProfile": "Electronic music fans, club culture enthusiasts, international festival-goers (18+)",
-    "source": "kappafuturfestival.it",
+    "source": "mock",
     "url": "https://www.kappafuturfestival.it/en"
   },
   {
@@ -264,7 +264,7 @@
     "fitScore": 93,
     "fitReason": "Tame Impala's Deadbeat album leans heavily into rave culture and clubbing atmospheres — a perfect crossover between psych-rock and electronic. One of two Italian dates, arena-scale show.",
     "attendeeProfile": "Indie and psychedelic rock fans, electronic crossover listeners, live music enthusiasts",
-    "source": "ticketmaster.it",
+    "source": "ticketmaster",
     "url": "https://www.ticketmaster.it/artist/tame-impala-biglietti/468983"
   },
   {
@@ -285,7 +285,7 @@
     "fitScore": 88,
     "fitReason": "Subsonica's landmark 30-year anniversary residency at OGR — 4 consecutive nights celebrating the Turin electronic rock pioneers. Intimate venue, high energy, historically significant.",
     "attendeeProfile": "Italian electronic rock fans, indie music lovers, 25–45 age group",
-    "source": "ticketmaster.it",
+    "source": "ticketmaster",
     "url": "https://www.ticketmaster.it/discover/torino"
   },
   {
@@ -307,7 +307,7 @@
     "fitScore": 82,
     "fitReason": "Underground heavy psych and stoner rock festival — raw, independent, community-driven. Great fit for rock taste; less aligned with electronic but strong on energy and genre depth.",
     "attendeeProfile": "Rock, metal and psychedelic music fans, underground scene regulars",
-    "source": "allevents.in",
+    "source": "mock",
     "url": "https://allevents.in/torino/Festivals"
   },
   {
@@ -329,7 +329,7 @@
     "fitScore": 80,
     "fitReason": "Large-scale indoor electronic music festival at Lingotto — mainstream EDM and techno acts, big production. Solid fit for electronic taste, slightly more commercial than underground.",
     "attendeeProfile": "Electronic and EDM fans, clubbers, festival-goers",
-    "source": "allevents.in",
+    "source": "mock",
     "url": "https://allevents.in/torino/Festivals"
   },
   {
@@ -350,7 +350,7 @@
     "fitScore": 55,
     "fitReason": "Marc Ribot's avant-garde and noise jazz has crossover appeal with experimental rock listeners. Late night club venue adds the right atmosphere, but it's a stretch from core electronic/rock taste.",
     "attendeeProfile": "Experimental music fans, jazz enthusiasts with indie crossover taste",
-    "source": "torinojazzfestival.it",
+    "source": "mock",
     "url": "https://www.torinojazzfestival.it/english/day-by-day-program/"
   },
   {
@@ -371,7 +371,7 @@
     "fitScore": 72,
     "fitReason": "1000+ musicians playing rock classics together in a stadium — a unique spectacle with strong rock DNA. More of a participatory experience than a traditional concert; great energy.",
     "attendeeProfile": "Rock fans, musicians of all levels, families, general public",
-    "source": "teatroregio.torino.it",
+    "source": "mock",
     "url": "https://pages.rockin1000.com/torino2026"
   },
   {
@@ -392,7 +392,7 @@
     "fitScore": 48,
     "fitReason": "Experimental live film soundtrack with guitar and violin — niche appeal for listeners who follow post-rock or cinematic music, but far from core electronic or rock territory.",
     "attendeeProfile": "Experimental jazz and post-rock listeners, cinema enthusiasts",
-    "source": "torinojazzfestival.it",
+    "source": "mock",
     "url": "https://www.torinojazzfestival.it/english/day-by-day-program/"
   },
   {
@@ -412,7 +412,7 @@
     "fitScore": 8,
     "fitReason": "Classical waltz orchestra — essentially no overlap with electronic or rock taste. Only marginal fit for listeners who enjoy cinematic or symphonic textures.",
     "attendeeProfile": "Classical music fans, families, general public",
-    "source": "songkick.com",
+    "source": "mock",
     "url": "https://www.ticketone.it/event/andre-rieu-inalpi-arena-20832175/"
   },
   {
@@ -432,7 +432,7 @@
     "fitScore": 5,
     "fitReason": "Symphonic classical concert — minimal relevance to electronic or rock taste. Mahler's dynamic range could appeal to post-rock listeners but the format is traditional concert hall.",
     "attendeeProfile": "Classical music enthusiasts, concert hall regulars",
-    "source": "allevents.in",
+    "source": "mock",
     "url": "https://www.teatroregio.torino.it/en/calendar/concerts"
   },
   {
@@ -455,7 +455,7 @@
     "fitScore": 97,
     "fitReason": "Italy's premier sustainable wine fair — 1,000+ wineries from 32 countries, 6,000 labels, focus on organic and biodynamic production. Masterclasses, Terroir Awards, and the Banca del Vino vintage cellar. The deepest wine immersion in the Bologna calendar.",
     "attendeeProfile": "Sommeliers, importers, restaurateurs, wine shop owners, serious wine enthusiasts",
-    "source": "slowinefair.slowfood.it",
+    "source": "mock",
     "url": "https://slowinefair.slowfood.it/"
   },
   {
@@ -477,7 +477,7 @@
     "fitScore": 95,
     "fitReason": "The flagship event of Italian independent winemakers — 1,000+ producers, 8,000+ labels across 40,000 sqm. Buy direct from vignaioli, attend ALMA masterclasses, explore the Fuori Mercato in city wine bars. 28,000 visitors in 2025. Essential for any serious wine lover.",
     "attendeeProfile": "Wine lovers, collectors, HoReCa professionals, independent winery enthusiasts",
-    "source": "mercatodeivini.it",
+    "source": "mock",
     "url": "https://mercatodeivini.it/"
   },
   {
@@ -499,7 +499,7 @@
     "fitScore": 90,
     "fitReason": "A week-long city festival with 100 wineries, masterclasses, talks and evening events across Bologna. Main venue at Palazzo Isolani (May 16–17). Free entry — excellent ratio of depth to accessibility. Celebrates Emilia-Romagna wines alongside national labels.",
     "attendeeProfile": "Wine enthusiasts, tourists, professionals, general public",
-    "source": "bolognawineweek.it",
+    "source": "mock",
     "url": "https://www.bolognawineweek.it/"
   },
   {
@@ -520,7 +520,7 @@
     "fitScore": 78,
     "fitReason": "60+ Emilia-Romagna wineries at the sea — focuses on the region's DOC and IGT wines including Sangiovese, Albana, and Pignoletto. A relaxed outdoor format, slightly outside Bologna but very accessible. Good regional wine discovery event.",
     "attendeeProfile": "Wine enthusiasts, food tourism fans, local producers",
-    "source": "enonauta.it",
+    "source": "mock",
     "url": "https://www.enonauta.it/calendario-eventi-vino-2026/"
   },
   {
@@ -542,7 +542,7 @@
     "fitScore": 42,
     "fitReason": "Traditional local food festival celebrating handmade raviola pasta — rich in culinary heritage but wine plays a secondary role. Good food-first experience, but not wine-focused enough to rank high for a wine enthusiast.",
     "attendeeProfile": "Food lovers, families, local residents, culinary tourists",
-    "source": "bolognawelcome.com",
+    "source": "mock",
     "url": "https://www.bolognawelcome.com/en/events/food-and-wine-en"
   },
   {
@@ -564,7 +564,7 @@
     "fitScore": 18,
     "fitReason": "Tech and digital innovation festival with a food industry track — wine is tangential at best. Relevant to those interested in agritech or food startup innovation, but essentially a tech event for wine lovers.",
     "attendeeProfile": "Digital marketers, tech entrepreneurs, food industry innovators",
-    "source": "bolognawelcome.com",
+    "source": "mock",
     "url": "https://www.bolognawelcome.com/it/blog/26-eventi-da-vivere-a-bologna-nel-2026"
   },
   {
@@ -586,7 +586,7 @@
     "fitScore": 35,
     "fitReason": "Iconic street food festival celebrating Bologna's most famous product. Wine pairing events are part of the program but the focus is firmly on salumi. A great experience but only partial overlap with a wine-first interest profile.",
     "attendeeProfile": "Food enthusiasts, tourists, general public, gastronomic travellers",
-    "source": "bolognawelcome.com",
+    "source": "mock",
     "url": "https://www.bolognawelcome.com/en/events/food-and-wine-en"
   },
   {
@@ -608,7 +608,7 @@
     "fitScore": 55,
     "fitReason": "White truffle festival in the Apennines with wine pairing events — truffle and wine are natural allies, and local Emilia-Romagna producers are usually present. Not wine-primary, but the pairing dimension elevates it for wine enthusiasts.",
     "attendeeProfile": "Gastronomy lovers, truffle hunters, food and wine pairing enthusiasts",
-    "source": "bolognawelcome.com",
+    "source": "mock",
     "url": "https://www.bolognawelcome.com/it/blog/26-eventi-da-vivere-a-bologna-nel-2026"
   },
   {
@@ -631,7 +631,7 @@
     "fitScore": 88,
     "fitReason": "Curated fine Champagne tasting event hosted by leading Italian fine wine distributor Excellence Sidi — grand houses alongside grower Champagnes, vertical tastings and guided masterclasses. Niche and high quality; ideal for the wine enthusiast who wants depth over breadth.",
     "attendeeProfile": "Fine wine collectors, sommeliers, serious Champagne enthusiasts, HoReCa buyers",
-    "source": "winenews.it",
+    "source": "mock",
     "url": "https://winenews.it/en/slow-wine-fair-2026-wine-as-motor-of-development-and-social-inclusion-in-territories_576583/"
   },
   {
@@ -653,7 +653,7 @@
     "fitScore": 62,
     "fitReason": "Runs alongside Slow Wine Fair and includes a dedicated natural wine section with Slow Food producers. The food focus is broad (vegan, plant-based, organic), but the wine crossover is meaningful for those interested in natural and organic wine specifically.",
     "attendeeProfile": "Health-conscious consumers, organic food buyers, natural wine enthusiasts, HoReCa professionals",
-    "source": "b2match.com",
+    "source": "mock",
     "url": "https://www.b2match.com/e/slow-wine-fair-sana-food-2026"
   }
 ]

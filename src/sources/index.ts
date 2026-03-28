@@ -63,7 +63,7 @@ export interface FindEventsOptions {
 }
 
 export async function findLiveEvents(
-  query: string,
+  query: string | undefined,
   options: FindEventsOptions = {}
 ): Promise<{ events: EventCard[]; sources: Record<string, number> }> {
   try {
@@ -75,15 +75,18 @@ export async function findLiveEvents(
 }
 
 async function _findLiveEvents(
-  query: string,
+  query: string | undefined,
   { location, formats, topics }: FindEventsOptions
 ): Promise<{ events: EventCard[]; sources: Record<string, number> }> {
   const active = providers.filter((p) => p.enabled);
 
+  // In DEMO mode, ignore query so stub providers return all mock data
+  const searchQuery = DEMO_MODE ? "" : (query ?? "");
+
   // Run provider searches and PredictHQ enrichment fetch in parallel
   const [results, enrichmentMap] = await Promise.all([
-    Promise.allSettled(active.map((p) => p.search(query, location))),
-    fetchEnrichmentMap(query, location ?? ""),
+    Promise.allSettled(active.map((p) => p.search(searchQuery, location))),
+    fetchEnrichmentMap(searchQuery, location ?? ""),
   ]);
 
   const allPartials: Partial<EventCard>[] = [];
@@ -108,7 +111,7 @@ async function _findLiveEvents(
   const sources: Record<string, number> = {};
   const events: EventCard[] = deduplicated.flatMap((partial) => {
     try {
-      const { fitScore, fitReason } = computeFitScore(partial, query, getEnrichment(partial, enrichmentMap));
+      const { fitScore, fitReason } = computeFitScore(partial, searchQuery, getEnrichment(partial, enrichmentMap));
       const source = partial.source || "mock";
       sources[source] = (sources[source] || 0) + 1;
 
