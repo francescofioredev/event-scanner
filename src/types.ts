@@ -1,4 +1,4 @@
-export type EventFormat = "conference" | "meetup" | "hackathon" | "workshop" | "webinar";
+export type EventFormat = "conference" | "meetup" | "hackathon" | "workshop" | "webinar" | "festival" | "concert" | "networking";
 export type PriceType = "free" | "paid" | "unknown";
 export type EventSource = "luma" | "meetup" | "ticketmaster" | "eventbrite" | "linkedin" | "predicthq" | "tickadoo" | "mock";
 

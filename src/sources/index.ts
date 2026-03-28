@@ -12,20 +12,21 @@ import demoProvider from "@/sources/stubs/demo";
 // ─── Registry ───────────────────────────────────────────────────────────────────
 // To add a new provider: import it above and add it to this array.
 
-const providers: EventProvider[] = [
-  lumaProvider,
-  meetupProvider,
-  ticketmasterProvider,
-  linkedinProvider,
-  tickadooProvider,
-  demoProvider,
-];
+const DEMO_MODE = process.env.DEMO === "true";
+
+const providers: EventProvider[] = DEMO_MODE
+  ? [demoProvider]
+  : [lumaProvider, meetupProvider, ticketmasterProvider, linkedinProvider, tickadooProvider, demoProvider];
 
 // Log provider status at startup
-const enabled = providers.filter((p) => p.enabled).map((p) => p.name);
-const disabled = providers.filter((p) => !p.enabled).map((p) => p.name);
-console.log(`[providers] active: ${enabled.join(", ") || "none"}`);
-if (disabled.length) console.log(`[providers] skipped (no credentials): ${disabled.join(", ")}`);
+if (DEMO_MODE) {
+  console.log("[providers] DEMO mode — only mock data");
+} else {
+  const enabled = providers.filter((p) => p.enabled).map((p) => p.name);
+  const disabled = providers.filter((p) => !p.enabled).map((p) => p.name);
+  console.log(`[providers] active: ${enabled.join(", ") || "none"}`);
+  if (disabled.length) console.log(`[providers] skipped (no credentials): ${disabled.join(", ")}`);
+}
 
 // ─── Deduplication ──────────────────────────────────────────────────────────────
 
@@ -55,12 +56,18 @@ function deduplicate(events: Partial<EventCard>[]): Partial<EventCard>[] {
 
 // ─── Aggregator ─────────────────────────────────────────────────────────────────
 
+export interface FindEventsOptions {
+  location?: string;
+  formats?: string[];
+  topics?: string[];
+}
+
 export async function findLiveEvents(
   query: string,
-  location?: string
+  options: FindEventsOptions = {}
 ): Promise<{ events: EventCard[]; sources: Record<string, number> }> {
   try {
-    return await _findLiveEvents(query, location);
+    return await _findLiveEvents(query, options);
   } catch (err) {
     console.error("[aggregator] Unexpected error:", err instanceof Error ? err.message : err);
     return { events: [], sources: {} };
@@ -69,14 +76,14 @@ export async function findLiveEvents(
 
 async function _findLiveEvents(
   query: string,
-  location?: string
+  { location, formats, topics }: FindEventsOptions
 ): Promise<{ events: EventCard[]; sources: Record<string, number> }> {
   const active = providers.filter((p) => p.enabled);
 
   // Run provider searches and PredictHQ enrichment fetch in parallel
   const [results, enrichmentMap] = await Promise.all([
     Promise.allSettled(active.map((p) => p.search(query, location))),
-    fetchEnrichmentMap(query, location),
+    fetchEnrichmentMap(query, location ?? ""),
   ]);
 
   const allPartials: Partial<EventCard>[] = [];
@@ -127,5 +134,11 @@ async function _findLiveEvents(
     }
   });
 
-  return { events, sources };
+  const filtered = events.filter((e) => {
+    if (formats && formats.length > 0 && !formats.includes(e.format)) return false;
+    if (topics && topics.length > 0 && !topics.some((t) => e.topics.map((et) => et.toLowerCase()).includes(t.toLowerCase()))) return false;
+    return true;
+  });
+
+  return { events: filtered, sources };
 }
