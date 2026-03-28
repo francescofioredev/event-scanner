@@ -1,6 +1,6 @@
 export type EventFormat = "conference" | "meetup" | "hackathon" | "workshop" | "webinar";
-export type PriceType = "free" | "paid";
-export type EventSource = "eventbrite" | "luma" | "mock";
+export type PriceType = "free" | "paid" | "unknown";
+export type EventSource = "luma" | "meetup" | "ticketmaster" | "linkedin" | "predicthq" | "tickadoo" | "mock";
 
 export interface EventCard {
   id: string;
