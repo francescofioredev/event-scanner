@@ -425,10 +425,10 @@ server.tool(
 
 // ─── OAuth consent page ─────────────────────────────────────────────────────
 
-server.app.get("/oauth/consent", (c) => {
+server.get("/oauth/consent", (c) => {
   const html = getConsentPageHtml(
-    process.env.MCP_USE_OAUTH_SUPABASE_PROJECT_ID!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    'zayxaqagtkewyugrcfvm',
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpheXhhcWFndGtld3l1Z3JjZnZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3MDczNDksImV4cCI6MjA5MDI4MzM0OX0.q8PIDw5bhMFyU1cyjMhxYW27ZQP3vaD9KqfZ9HasjU8',
   );
   return c.html(html);
 });
