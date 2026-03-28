@@ -324,7 +324,10 @@ function SourceSummary({ sources }: { sources?: Record<string, number> }) {
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
       {Object.entries(sources).map(([source, count]) => {
-        const cfg = SOURCE_CONFIG[source] || SOURCE_CONFIG.mock;
+        const cfg = SOURCE_CONFIG[source];
+        const bg = cfg?.bg ?? "#f3f4f6";
+        const color = cfg?.color ?? "#6b7280";
+        const label = cfg?.label ?? source;
         return (
           <span key={source} style={{
             display: "inline-flex",
@@ -332,12 +335,12 @@ function SourceSummary({ sources }: { sources?: Record<string, number> }) {
             gap: 4,
             padding: "2px 8px",
             borderRadius: 9999,
-            backgroundColor: cfg.bg,
-            color: cfg.color,
+            backgroundColor: bg,
+            color,
             fontSize: 11,
             fontWeight: 600,
           }}>
-            {cfg.label}: {count}
+            {label}: {count}
           </span>
         );
       })}
