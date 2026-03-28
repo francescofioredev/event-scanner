@@ -32,7 +32,10 @@ const server = new MCPServer({
       sizes: ["512x512"],
     },
   ],
-  oauth: oauthSupabaseProvider(),
+  oauth: oauthSupabaseProvider({
+    projectId: "zayxaqagtkewyugrcfvm",
+    jwtSecret: "1jOcpXK+Rm+HCFoVFlCHHT7yVyFJp5l3h/xqfkiMvc+e6udv37OqQyhOtEmPNqNMqZEOfK+Yi42L8vnxxEYvHQ==",
+  }),
 });
 
 // ─── Tools ──────────────────────────────────────────────────────────────────────
