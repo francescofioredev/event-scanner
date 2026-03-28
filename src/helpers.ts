@@ -28,7 +28,16 @@ export function extractTopicsFromText(text: string): string[] {
   return topicKeywords.filter((kw) => lower.includes(kw.toLowerCase())).slice(0, 5);
 }
 
-export function computeFitScore(event: Partial<EventCard>, query: string): { fitScore: number; fitReason: string } {
+export interface EnrichmentHints {
+  phqRank?: number;       // 0–100 event significance from PredictHQ
+  phqAttendance?: number; // predicted attendance from PredictHQ
+}
+
+export function computeFitScore(
+  event: Partial<EventCard>,
+  query: string,
+  enrichment: EnrichmentHints = {}
+): { fitScore: number; fitReason: string } {
   let score = 50;
   const reasons: string[] = [];
 
@@ -52,6 +61,19 @@ export function computeFitScore(event: Partial<EventCard>, query: string): { fit
   if (event.price === "free") {
     score += 5;
     reasons.push("free entry");
+  }
+
+  // PredictHQ enrichment signals
+  if (enrichment.phqRank != null) {
+    // phqRank 0–100: scale to a ±10 bonus (rank 50 = neutral, 100 = +10)
+    const rankBonus = Math.round((enrichment.phqRank - 50) / 5);
+    score += rankBonus;
+    if (rankBonus > 0) reasons.push(`high-significance event (rank ${enrichment.phqRank})`);
+  }
+
+  if (enrichment.phqAttendance != null && enrichment.phqAttendance >= 1000) {
+    score += 5;
+    reasons.push(`large event (~${enrichment.phqAttendance.toLocaleString()} attendees)`);
   }
 
   score = Math.min(100, Math.max(0, score));

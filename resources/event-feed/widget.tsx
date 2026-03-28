@@ -9,14 +9,14 @@ const eventCardSchema = z.object({
   date: z.string(),
   location: z.string(),
   format: z.enum(["conference", "meetup", "hackathon", "workshop", "webinar"]),
-  price: z.enum(["free", "paid"]),
+  price: z.enum(["free", "paid", "unknown"]),
   priceAmount: z.number().optional(),
   currency: z.string().optional(),
   topics: z.array(z.string()),
   fitScore: z.number(),
   fitReason: z.string(),
   attendeeProfile: z.string(),
-  source: z.enum(["eventbrite", "luma", "mock"]).optional(),
+  source: z.enum(["luma", "meetup", "ticketmaster", "eventbrite", "linkedin", "predicthq", "tickadoo", "mock"]).optional(),
   url: z.string().optional(),
 });
 
@@ -67,9 +67,14 @@ function useColors() {
 // ─── Source badge config ────────────────────────────────────────────────────────
 
 const SOURCE_CONFIG: Record<string, { label: string; bg: string; color: string }> = {
-  eventbrite: { label: "Eventbrite", bg: "#fff1eb", color: "#d1410c" },
-  luma:       { label: "Luma",       bg: "#f0eeff", color: "#5b4ccc" },
-  mock:       { label: "Demo",       bg: "#f3f4f6", color: "#6b7280" },
+  luma:         { label: "Luma",         bg: "#f0eeff", color: "#5b4ccc" },
+  meetup:       { label: "Meetup",       bg: "#fff0f0", color: "#e02626" },
+  ticketmaster: { label: "Ticketmaster", bg: "#fff7e6", color: "#b45309" },
+  eventbrite:   { label: "Eventbrite",   bg: "#fff1eb", color: "#d1410c" },
+  linkedin:     { label: "LinkedIn",     bg: "#e8f3fb", color: "#0a66c2" },
+  predicthq:    { label: "PredictHQ",    bg: "#f0fdf4", color: "#166534" },
+  tickadoo:     { label: "Tickadoo",     bg: "#fdf2f8", color: "#9d174d" },
+  mock:         { label: "Demo",         bg: "#f3f4f6", color: "#6b7280" },
 };
 
 // ─── Format badge config ────────────────────────────────────────────────────────
@@ -307,7 +312,7 @@ function EventCardItem({ event, colors }: { event: EventCard; colors: ReturnType
   );
 }
 
-function SourceSummary({ sources, colors }: { sources?: Record<string, number>; colors: ReturnType<typeof useColors> }) {
+function SourceSummary({ sources }: { sources?: Record<string, number> }) {
   if (!sources || Object.keys(sources).length <= 1) return null;
 
   return (
@@ -420,7 +425,7 @@ export default function EventFeed() {
               {events.length} found
             </span>
           </div>
-          <SourceSummary sources={sources} colors={colors} />
+          <SourceSummary sources={sources} />
         </div>
 
         {/* Event list */}
