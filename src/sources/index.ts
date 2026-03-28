@@ -7,6 +7,7 @@ import meetupProvider from "@/sources/meetup";
 import ticketmasterProvider from "@/sources/ticketmaster";
 import linkedinProvider from "@/sources/linkedin";
 import tickadooProvider from "@/sources/tickadoo";
+import demoProvider from "@/sources/stubs/demo";
 
 // ─── Registry ───────────────────────────────────────────────────────────────────
 // To add a new provider: import it above and add it to this array.
@@ -17,7 +18,14 @@ const providers: EventProvider[] = [
   ticketmasterProvider,
   linkedinProvider,
   tickadooProvider,
+  demoProvider,
 ];
+
+// Log provider status at startup
+const enabled = providers.filter((p) => p.enabled).map((p) => p.name);
+const disabled = providers.filter((p) => !p.enabled).map((p) => p.name);
+console.log(`[providers] active: ${enabled.join(", ") || "none"}`);
+if (disabled.length) console.log(`[providers] skipped (no credentials): ${disabled.join(", ")}`);
 
 // ─── Deduplication ──────────────────────────────────────────────────────────────
 
@@ -73,10 +81,12 @@ async function _findLiveEvents(
 
   const allPartials: Partial<EventCard>[] = [];
   results.forEach((result, i) => {
+    const name = active[i].name;
     if (result.status === "fulfilled") {
+      console.log(`[${name}] ${result.value.length} result(s)`);
       allPartials.push(...result.value);
     } else {
-      console.error(`[${active[i].name}] Rejected:`, result.reason);
+      console.error(`[${name}] Rejected:`, result.reason);
     }
   });
 

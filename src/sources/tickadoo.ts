@@ -21,7 +21,7 @@ async function callTool(name: string, args: Record<string, unknown>): Promise<an
       method: "tools/call",
       params: { name, arguments: args },
     }),
-    signal: AbortSignal.timeout(10_000),
+    signal: AbortSignal.timeout(15_000),
   });
 
   if (!res.ok) throw new Error(`HTTP ${res.status}`);

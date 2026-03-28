@@ -9,6 +9,7 @@ import meetupProvider from "../src/sources/meetup.js";
 import ticketmasterProvider from "../src/sources/ticketmaster.js";
 import linkedinProvider from "../src/sources/linkedin.js";
 import tickadooProvider from "../src/sources/tickadoo.js";
+import demoProvider from "../src/sources/stubs/demo.js";
 import { fetchEnrichmentMap, predicthqEnrichmentEnabled } from "../src/enrichment/predicthq.js";
 
 const providers = [
@@ -17,6 +18,7 @@ const providers = [
   ticketmasterProvider,
   linkedinProvider,
   tickadooProvider,
+  demoProvider,
 ];
 
 const query = process.argv[2] ?? "AI";

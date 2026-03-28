@@ -5,9 +5,12 @@ import { inferFormat, extractTopicsFromText, formatDate } from "@/helpers";
 const lumaProvider: EventProvider = {
   name: "luma",
   enabled: true,
-  async search(query) {
+  async search(query, location) {
     try {
-      const params = new URLSearchParams({ pagination_limit: "10", query });
+      // The discover endpoint has no geo filtering — append location to query as a workaround.
+      // For proper geo filtering, use the official Luma API (requires LUMA_API_KEY).
+      const fullQuery = location ? `${query} ${location}` : query;
+      const params = new URLSearchParams({ pagination_limit: "10", query: fullQuery });
       const res = await fetch(`https://api.lu.ma/discover/get-paginated-events?${params}`, {
         signal: AbortSignal.timeout(8000),
       });
