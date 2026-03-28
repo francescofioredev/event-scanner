@@ -74,7 +74,15 @@ server.tool(
       location: z
         .string()
         .optional()
-        .describe("City or region to focus the search — e.g. 'Turin', 'Milan', 'London'. Helps Eventbrite narrow results."),
+        .describe("City or region to focus the search — e.g. 'Turin', 'Milan', 'London'."),
+      formats: z
+        .array(z.enum(["conference", "meetup", "hackathon", "workshop", "webinar", "festival", "concert", "networking"]))
+        .optional()
+        .describe("Filter by event format — e.g. ['conference', 'meetup']. Leave empty for all formats."),
+      topics: z
+        .array(z.string())
+        .optional()
+        .describe("Filter by topic — e.g. ['AI', 'Fintech']. An event must match at least one topic."),
     }),
     annotations: { readOnlyHint: true, openWorldHint: true },
     widget: {
@@ -83,8 +91,8 @@ server.tool(
       invoked: "Live events loaded",
     },
   },
-  async ({ query, location }) => {
-    const { events, sources } = await findLiveEvents(query, location);
+  async ({ query, location, formats, topics }) => {
+    const { events, sources } = await findLiveEvents(query, { location, formats, topics });
 
     events.sort((a, b) => b.fitScore - a.fitScore);
 

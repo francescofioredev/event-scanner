@@ -8,7 +8,7 @@ const eventCardSchema = z.object({
   title: z.string(),
   date: z.string(),
   location: z.string(),
-  format: z.enum(["conference", "meetup", "hackathon", "workshop", "webinar"]),
+  format: z.enum(["conference", "meetup", "hackathon", "workshop", "webinar", "festival", "concert", "networking"]),
   price: z.enum(["free", "paid", "unknown"]),
   priceAmount: z.number().optional(),
   currency: z.string().optional(),
@@ -16,7 +16,7 @@ const eventCardSchema = z.object({
   fitScore: z.number(),
   fitReason: z.string(),
   attendeeProfile: z.string(),
-  source: z.enum(["luma", "meetup", "ticketmaster", "eventbrite", "linkedin", "predicthq", "tickadoo", "mock"]).optional(),
+  source: z.string().optional(),
   url: z.string().optional(),
 });
 
@@ -79,30 +79,36 @@ const SOURCE_CONFIG: Record<string, { label: string; bg: string; color: string }
 
 // ─── Format badge config ────────────────────────────────────────────────────────
 
-const FORMAT_CONFIG: Record<EventCard["format"], { label: string; emoji: string; bg: string; color: string }> = {
+const FORMAT_CONFIG: Record<string, { label: string; emoji: string; bg: string; color: string }> = {
   conference: { label: "Conference", emoji: "🎤", bg: "#ede9fe", color: "#7c3aed" },
   meetup:     { label: "Meetup",     emoji: "🤝", bg: "#d1fae5", color: "#065f46" },
   hackathon:  { label: "Hackathon",  emoji: "⚡", bg: "#fef3c7", color: "#92400e" },
   workshop:   { label: "Workshop",   emoji: "🛠️", bg: "#fce7f3", color: "#9d174d" },
   webinar:    { label: "Webinar",    emoji: "💻", bg: "#e0f2fe", color: "#0369a1" },
+  festival:   { label: "Festival",   emoji: "🎪", bg: "#fff7ed", color: "#c2410c" },
+  concert:    { label: "Concert",    emoji: "🎵", bg: "#fdf4ff", color: "#7e22ce" },
+  networking: { label: "Networking", emoji: "🤝", bg: "#f0fdf4", color: "#15803d" },
 };
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function SourceBadge({ source }: { source?: string }) {
-  const cfg = SOURCE_CONFIG[source || "mock"] || SOURCE_CONFIG.mock;
+  const cfg = SOURCE_CONFIG[source || "mock"];
+  const bg = cfg?.bg ?? "#f3f4f6";
+  const color = cfg?.color ?? "#6b7280";
+  const label = cfg?.label ?? source ?? "unknown";
   return (
     <span style={{
       display: "inline-block",
       padding: "1px 6px",
       borderRadius: 4,
-      backgroundColor: cfg.bg,
-      color: cfg.color,
+      backgroundColor: bg,
+      color,
       fontSize: 10,
       fontWeight: 600,
       letterSpacing: "0.02em",
     }}>
-      {cfg.label}
+      {label}
     </span>
   );
 }
@@ -167,7 +173,7 @@ function TopicChip({ topic, colors }: { topic: string; colors: ReturnType<typeof
 }
 
 function FormatBadge({ format }: { format: EventCard["format"] }) {
-  const cfg = FORMAT_CONFIG[format];
+  const cfg = FORMAT_CONFIG[format] ?? { label: format, emoji: "📅", bg: "#f3f4f6", color: "#6b7280" };
   return (
     <span style={{
       display: "inline-flex",
