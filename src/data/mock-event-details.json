@@ -1,0 +1,337 @@
+[
+  {
+    "id": "evt-001",
+    "title": "AI Summit Turin",
+    "date": "Apr 12, 2026",
+    "location": "Turin, Italy",
+    "format": "conference",
+    "price": "free",
+    "topics": ["AI", "Agents", "LLM", "Machine Learning"],
+    "fitScore": 87,
+    "fitReason": "Strong match on AI/agents topics and free entry fits any budget.",
+    "attendeeProfile": "AI researchers, developers, startup founders",
+    "source": "mock",
+    "description": "AI Summit Turin is the premier AI event in Northern Italy, gathering leading researchers, practitioners, and founders for a full day of talks, panels, and networking. Expect deep dives into LLM architecture, agentic systems, and real-world AI deployments — no fluff, just substance.",
+    "agenda": [
+      "09:00 — Keynote: The State of AI Agents in 2026",
+      "10:30 — Panel: LLMs in Production — Lessons Learned",
+      "12:00 — Lunch & Networking",
+      "14:00 — Talk: Agentic Workflows at Scale",
+      "15:30 — Workshop: Prompt Engineering for Complex Tasks",
+      "17:00 — Lightning Talks: 5-min rapid-fire demos",
+      "18:00 — Aperitivo Networking"
+    ],
+    "perks": [
+      "Free lunch and coffee breaks",
+      "Access to all recorded talks post-event",
+      "Networking app with attendee matching",
+      "Goodie bag with sponsor swag"
+    ],
+    "logistics": {
+      "venue": "OGR Torino, Corso Castelfidardo 22, Turin",
+      "duration": "Full day (9:00–19:00)",
+      "capacity": 500,
+      "website": "https://example.com/ai-summit-turin"
+    },
+    "scoreBreakdown": {
+      "topic": 95,
+      "attendees": 88,
+      "schedule": 85,
+      "budget": 100,
+      "size": 72
+    }
+  },
+  {
+    "id": "evt-002",
+    "title": "Founders Dinner Turin",
+    "date": "Apr 18, 2026",
+    "location": "Turin, Italy",
+    "format": "meetup",
+    "price": "paid",
+    "priceAmount": 20,
+    "currency": "EUR",
+    "topics": ["Networking", "Startups", "Co-founder", "Fundraising"],
+    "fitScore": 82,
+    "fitReason": "Intimate networking format ideal for finding collaborators and co-founders.",
+    "attendeeProfile": "Early-stage founders, angel investors",
+    "source": "mock",
+    "description": "An intimate dinner for 30 early-stage founders and select angel investors. Structured around 10-minute introductions per table followed by open networking. Purposely small to keep conversations high-signal. Ideal if you're looking for a co-founder or first check.",
+    "agenda": [
+      "19:00 — Welcome drinks",
+      "19:30 — Seated dinner begins",
+      "20:00 — Table introductions round (10 min per person)",
+      "21:00 — Open networking & dessert",
+      "22:30 — Event closes"
+    ],
+    "perks": [
+      "3-course dinner included",
+      "Curated guest list — no service providers",
+      "Private Slack group for attendees post-event",
+      "Introductions facilitated by host"
+    ],
+    "logistics": {
+      "venue": "Ristorante Del Cambio, Piazza Carignano 2, Turin",
+      "duration": "3.5 hours (19:00–22:30)",
+      "capacity": 30,
+      "website": "https://example.com/founders-dinner-turin"
+    },
+    "scoreBreakdown": {
+      "topic": 78,
+      "attendees": 95,
+      "schedule": 80,
+      "budget": 88,
+      "size": 98
+    }
+  },
+  {
+    "id": "evt-003",
+    "title": "AI for Healthcare Webinar",
+    "date": "Apr 28, 2026",
+    "location": "Online",
+    "format": "webinar",
+    "price": "free",
+    "topics": ["AI", "Healthcare", "Ethics", "LLM"],
+    "fitScore": 71,
+    "fitReason": "Relevant AI content in an accessible online format with no cost or travel.",
+    "attendeeProfile": "Healthcare professionals, AI practitioners",
+    "source": "mock",
+    "description": "A 90-minute online session exploring how LLMs are being deployed in clinical settings — from diagnostic assistance to patient communication. Includes a panel with a hospital CTO, an AI ethics researcher, and a healthcare startup founder. Q&A throughout.",
+    "agenda": [
+      "14:00 — Introduction & speaker bios",
+      "14:10 — Talk: LLMs in Clinical Decision Support",
+      "14:40 — Panel: Ethics and Accountability in Healthcare AI",
+      "15:20 — Live Q&A",
+      "15:30 — Wrap-up and resources shared"
+    ],
+    "perks": [
+      "Free recording available 48h post-event",
+      "Resource pack: papers, tools, datasets shared",
+      "Certificate of attendance"
+    ],
+    "logistics": {
+      "venue": "Online (Zoom)",
+      "duration": "90 minutes",
+      "capacity": 1000,
+      "website": "https://example.com/ai-healthcare-webinar"
+    },
+    "scoreBreakdown": {
+      "topic": 80,
+      "attendees": 60,
+      "schedule": 90,
+      "budget": 100,
+      "size": 40
+    }
+  },
+  {
+    "id": "evt-004",
+    "title": "WebDev Hackathon 2026",
+    "date": "Apr 20–21, 2026",
+    "location": "Remote",
+    "format": "hackathon",
+    "price": "free",
+    "topics": ["JavaScript", "React", "Next.js", "APIs"],
+    "fitScore": 65,
+    "fitReason": "Hands-on building experience, though focus is frontend rather than AI.",
+    "attendeeProfile": "Frontend and full-stack developers",
+    "source": "mock",
+    "description": "A 48-hour remote hackathon for web developers. Build something new with React, Next.js, or any web tech stack. Judged on creativity, code quality, and UX. Prizes sponsored by Vercel and Cloudflare. Solo or team up to 4.",
+    "agenda": [
+      "Day 1 — 09:00: Kickoff, theme reveal, team formation",
+      "Day 1 — 10:00: Hacking begins",
+      "Day 1 — 22:00: Optional mid-point check-in stream",
+      "Day 2 — 09:00: Final stretch hacking",
+      "Day 2 — 17:00: Submissions close",
+      "Day 2 — 18:00: Live demos (top 10 teams)",
+      "Day 2 — 20:00: Winners announced"
+    ],
+    "perks": [
+      "€500 top prize (Vercel credits + cash)",
+      "Cloudflare swag for all finalists",
+      "Project featured on sponsors' social media",
+      "All participants get 3-month Vercel Pro free"
+    ],
+    "logistics": {
+      "venue": "Remote (Discord + Zoom)",
+      "duration": "48 hours",
+      "capacity": 400,
+      "website": "https://example.com/webdev-hackathon-2026"
+    },
+    "scoreBreakdown": {
+      "topic": 55,
+      "attendees": 70,
+      "schedule": 62,
+      "budget": 100,
+      "size": 48
+    }
+  },
+  {
+    "id": "evt-005",
+    "title": "React Advanced Milan",
+    "date": "May 3, 2026",
+    "location": "Milan, Italy",
+    "format": "conference",
+    "price": "paid",
+    "priceAmount": 150,
+    "currency": "EUR",
+    "topics": ["React", "Frontend", "TypeScript", "Performance"],
+    "fitScore": 58,
+    "fitReason": "High-quality technical content but price and frontend focus reduce fit.",
+    "attendeeProfile": "Senior frontend engineers",
+    "source": "mock",
+    "description": "A single-track technical conference for senior React engineers. No beginner content — straight to advanced patterns, performance optimization, compiler internals, and React 19 deep dives. 200 attendees cap keeps the quality high. €150 early bird (€220 regular).",
+    "agenda": [
+      "09:30 — Keynote: React 19 Compiler Internals",
+      "10:30 — Talk: Server Components in the Wild",
+      "11:30 — Talk: Advanced State Management Patterns",
+      "12:30 — Lunch",
+      "14:00 — Workshop: Performance Profiling with DevTools",
+      "16:00 — Panel: The Future of Frontend Architecture",
+      "17:30 — Closing remarks + drinks"
+    ],
+    "perks": [
+      "Lunch and coffee included",
+      "All slides and recordings post-event",
+      "Exclusive Discord for attendees",
+      "Signed books from speakers"
+    ],
+    "logistics": {
+      "venue": "BASE Milano, Via Bergognone 34, Milan",
+      "duration": "Full day (9:30–18:00)",
+      "capacity": 200,
+      "website": "https://example.com/react-advanced-milan"
+    },
+    "scoreBreakdown": {
+      "topic": 62,
+      "attendees": 65,
+      "schedule": 70,
+      "budget": 42,
+      "size": 75
+    }
+  },
+  {
+    "id": "evt-006",
+    "title": "UX Design Workshop",
+    "date": "Apr 15, 2026",
+    "location": "Milan, Italy",
+    "format": "workshop",
+    "price": "paid",
+    "priceAmount": 45,
+    "currency": "EUR",
+    "topics": ["Design", "UX", "Figma", "Product"],
+    "fitScore": 52,
+    "fitReason": "Useful design skills but not closely aligned with core technical interests.",
+    "attendeeProfile": "Product designers, UX researchers",
+    "source": "mock",
+    "description": "A hands-on 4-hour workshop covering UX research methods, interaction design principles, and advanced Figma techniques. Led by a senior product designer from a top Milan agency. Bring your laptop — you'll design a real interface from scratch during the session.",
+    "agenda": [
+      "10:00 — UX Research methods: when and how to use them",
+      "11:00 — Interaction design: mapping user flows",
+      "12:00 — Figma deep-dive: components, variants, auto-layout",
+      "13:00 — Guided design exercise (individual + peer review)",
+      "14:00 — Wrap-up and portfolio tips"
+    ],
+    "perks": [
+      "Figma Pro trial (2 months)",
+      "Workshop materials and templates",
+      "Coffee and snacks included",
+      "Certificate of completion"
+    ],
+    "logistics": {
+      "venue": "Talent Garden Milano Calabiana, Via Arcivescovo Calabiana 6, Milan",
+      "duration": "4 hours (10:00–14:00)",
+      "capacity": 25,
+      "website": "https://example.com/ux-design-workshop"
+    },
+    "scoreBreakdown": {
+      "topic": 42,
+      "attendees": 45,
+      "schedule": 80,
+      "budget": 72,
+      "size": 90
+    }
+  },
+  {
+    "id": "evt-007",
+    "title": "Open Source Community Day",
+    "date": "May 8, 2026",
+    "location": "Turin, Italy",
+    "format": "meetup",
+    "price": "free",
+    "topics": ["Open Source", "Community", "DevTools", "Collaboration"],
+    "fitScore": 48,
+    "fitReason": "Local and free, but niche open-source focus may not match current goals.",
+    "attendeeProfile": "Open source contributors, developers",
+    "source": "mock",
+    "description": "A community-run day for open source contributors and enthusiasts in Turin. Short talks, project showcases, and collaborative coding sessions. Great for meeting local developers and discovering interesting projects to contribute to. Bring your laptop.",
+    "agenda": [
+      "10:00 — Welcome and intro to attendees",
+      "10:30 — Lightning talks: OSS project showcase (5×10 min)",
+      "12:00 — Lunch (self-organized, nearby restaurants)",
+      "13:30 — Unconference: topic voting and self-organized sessions",
+      "16:00 — Collaborative coding / contribution sprints",
+      "18:00 — Wrap-up beers"
+    ],
+    "perks": [
+      "Free entry and coffee",
+      "GitHub stickers and swag",
+      "Get listed as a contributor on featured projects"
+    ],
+    "logistics": {
+      "venue": "Toolbox Coworking, Via Agostino da Montefeltro 2, Turin",
+      "duration": "Full day (10:00–18:00)",
+      "capacity": 80,
+      "website": "https://example.com/open-source-community-day"
+    },
+    "scoreBreakdown": {
+      "topic": 38,
+      "attendees": 52,
+      "schedule": 55,
+      "budget": 100,
+      "size": 62
+    }
+  },
+  {
+    "id": "evt-008",
+    "title": "B2B SaaS Product Conference",
+    "date": "Apr 25, 2026",
+    "location": "Milan, Italy",
+    "format": "conference",
+    "price": "paid",
+    "priceAmount": 89,
+    "currency": "EUR",
+    "topics": ["Product", "SaaS", "B2B", "Strategy", "GTM"],
+    "fitScore": 34,
+    "fitReason": "B2B SaaS focus is a poor match — topic and audience don't align with profile.",
+    "attendeeProfile": "Product managers, B2B SaaS founders",
+    "source": "mock",
+    "description": "A one-day conference for B2B SaaS product leaders and founders. Topics span product-led growth, GTM strategy, pricing models, and customer success. Heavy on case studies from European SaaS companies. Best suited for PMs and growth-focused founders.",
+    "agenda": [
+      "09:00 — Keynote: B2B SaaS in 2026 — Market Trends",
+      "10:00 — Talk: Product-Led Growth in Practice",
+      "11:00 — Workshop: Pricing Strategy for SaaS",
+      "12:30 — Lunch & Expo",
+      "14:00 — Panel: GTM Lessons from €1M to €10M ARR",
+      "15:30 — Talk: Customer Success as a Growth Engine",
+      "17:00 — Networking drinks"
+    ],
+    "perks": [
+      "Lunch and coffee included",
+      "Access to speaker slide decks",
+      "Expo hall with 20+ SaaS tooling vendors",
+      "Networking app"
+    ],
+    "logistics": {
+      "venue": "MiCo Milano Congressi, Piazza Karl Marx, Milan",
+      "duration": "Full day (9:00–18:00)",
+      "capacity": 350,
+      "website": "https://example.com/b2b-saas-product-conf"
+    },
+    "scoreBreakdown": {
+      "topic": 28,
+      "attendees": 30,
+      "schedule": 55,
+      "budget": 52,
+      "size": 40
+    }
+  }
+]

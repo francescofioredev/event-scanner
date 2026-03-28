@@ -212,6 +212,8 @@ function PricePill({ event, colors }: { event: EventCard; colors: ReturnType<typ
 }
 
 function EventCardItem({ event, colors }: { event: EventCard; colors: ReturnType<typeof useColors> }) {
+  const { sendFollowUpMessage } = useWidget<Props>();
+
   const titleContent = (
     <h3 style={{
       margin: 0,
@@ -227,15 +229,19 @@ function EventCardItem({ event, colors }: { event: EventCard; colors: ReturnType
   );
 
   return (
-    <div style={{
-      backgroundColor: colors.cardBg,
-      border: `1px solid ${colors.border}`,
-      borderRadius: 12,
-      padding: 16,
-      display: "flex",
-      flexDirection: "column",
-      gap: 10,
-    }}>
+    <div
+      onClick={() => sendFollowUpMessage(`Tell me more about event ${event.id}`)}
+      style={{
+        backgroundColor: colors.cardBg,
+        border: `1px solid ${colors.border}`,
+        borderRadius: 12,
+        padding: 16,
+        display: "flex",
+        flexDirection: "column",
+        gap: 10,
+        cursor: "pointer",
+      }}
+    >
       {/* Header row: source + title + format badge */}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
         <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4 }}>
@@ -249,6 +255,7 @@ function EventCardItem({ event, colors }: { event: EventCard; colors: ReturnType
               target="_blank"
               rel="noopener noreferrer"
               style={{ textDecoration: "none" }}
+              onClick={(e) => e.stopPropagation()}
             >
               {titleContent}
             </a>
@@ -290,6 +297,11 @@ function EventCardItem({ event, colors }: { event: EventCard; colors: ReturnType
         <p style={{ margin: 0, fontSize: 12, color: colors.textSecondary, lineHeight: 1.4 }}>
           {event.fitReason}
         </p>
+      </div>
+
+      {/* Click hint */}
+      <div style={{ textAlign: "right" }}>
+        <span style={{ fontSize: 11, color: colors.textMuted }}>Tap to see details →</span>
       </div>
     </div>
   );
